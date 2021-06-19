@@ -3,6 +3,12 @@ using System.Net;
 using System.IO;
 using System.Threading;
 using Newtonsoft.Json.Linq;
+using System.Drawing.Imaging;
+using System.Drawing;
+using IronPython.Hosting;
+using Microsoft.Scripting.Hosting;
+using System.Linq;
+using System.Collections;
 
 namespace HahaServer
 {
@@ -167,6 +173,9 @@ namespace HahaServer
                             requestDeserialized.SelectToken("params").SelectToken("tag").ToString()
                             ); ;
                         break;
+                    case "photoAnalize":
+                        response = photoAnalize(getHistory(requestDeserialized.SelectToken("params").SelectToken("token").ToString()), getHistory(requestDeserialized.SelectToken("params").SelectToken("photo").ToString()));
+                        break;
                     default:
                         response = unKnownMethod(requestDeserialized.SelectToken("method").ToString());
                         Console.WriteLine("Пришел неизвестный метод");
@@ -271,6 +280,7 @@ namespace HahaServer
 
         static string pinCheck(string pin, string phone)
         {
+            
             JObject response = new JObject();
             phone = String.Join("", phone.Split('+', ' ', '-')); //удаляем парашу
             DataBase dataBase = null;
@@ -286,12 +296,17 @@ namespace HahaServer
             {
                 dataBase.Notify += messaging;
             }
+            
             if (dataBase.checkAuth(phone, pin))
             {
                 response.Add("type", "approved");
+                
                 response.Add("token", dataBase.getPatientToken(phone));
+                Console.WriteLine("Получаем пациента");
                 Patient patient = dataBase.getPatient(phone);
+                
                 JObject param = new JObject();
+                
                 param.Add("id", patient.Id);
                 param.Add("firstname", patient.FirstName);
                 param.Add("surname", patient.SurName);
@@ -321,8 +336,11 @@ namespace HahaServer
             {
                 dataBase.Notify += messaging;
             }
+            
             Patient patient = dataBase.getHistoryParams(token);
+            //Console.WriteLine("тут");
             JObject response = new JObject();
+            
             response.Add(patient.getParams());
             Console.WriteLine(response.ToString());
             return response.ToString();
@@ -331,6 +349,7 @@ namespace HahaServer
         static string setData (string token, int topPress, int lowPress, int pulse, int saturation, long unixtime, string tag)
         {
             JObject response = new JObject();
+            //Console.WriteLine("Пациента надо найти");
             DataBase dataBase = null;
             try
             {
@@ -347,6 +366,7 @@ namespace HahaServer
             }
             
             Patient patient = dataBase.getPatient(token);
+            //Console.WriteLine("Пациента нашли");
             try
             {
                 dataBase.addInfoPatient(token, topPress, lowPress, pulse, saturation, unixtime, tag);
@@ -356,9 +376,86 @@ namespace HahaServer
             {
                 response.Add("err", ex.Message);
             }
-
+            //Console.WriteLine("ответ готов");
             return response.ToString();
             
         }
+
+        static string photoAnalize (string token, string basePhoto)
+        {
+            string name = "tonometr";
+            DataBase dataBase = null;
+            try
+            {
+                dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            if (DEBUG)
+            {
+                dataBase.Notify += messaging;
+            }
+
+            string input = dataBase.getScope(token);
+
+            var param = input.Split(' ');
+            var image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto)));
+            bool flag = true;
+            int i = 1;
+            while (flag)
+            {
+                FileInfo fileInf = new FileInfo(name + ".jpg");
+                if (fileInf.Exists)
+                {
+                    name += i.ToString();
+                }
+                else
+                {
+                    image.Save(name + ".jpg", ImageFormat.Jpeg);
+                }
+            }
+            ScriptEngine engine = Python.CreateEngine();
+            ScriptScope scope = engine.CreateScope();
+
+            engine.ExecuteFile("main.py", scope);
+            dynamic function = scope.GetVariable("recognize_digits");
+            dynamic result = function(name + ".jpg", param[1], param[0], param[3], param[2], param[5], param[4]);
+
+            return null;
+        }
+        /*
+        static string analizeParam(string token)
+        {
+            DataBase dataBase = null;
+            try
+            {
+                dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            if (DEBUG)
+            {
+                dataBase.Notify += messaging;
+            }
+            Patient patient = dataBase.getHistoryParams(token);
+            List<Patient.Params> list = patient.getParams();
+            var top = from i in list
+                            select i.TopPress;
+            var low = from i in list
+                      select i.LowPress;
+            var pulse = from i in list
+                      select i.Pulse;
+            var line = top.ToList();
+            line.Sort();
+            int leftTop = 
+
+        }
+        */
+
+
     }
 }
