@@ -551,10 +551,10 @@ namespace HahaServer
                         }
                         else
                         {
-                            Notify?.Invoke("ПОльзователь с токеном " + token + " не найден");
+                            Notify?.Invoke("Not found patient by using token " + token);
                         }
                     }
-                    request = "SELECT MAX(topPress), MIN(toppress), MAX(lowPress), MIN(lowPress), MAX(pulse), MIN(Pulse) FROM params WHERE patientid=" + pacientID + " AND unixtime=UNIX_TIMESTAMP()-7*24*60*60;";
+                    request = "SELECT MAX(topPress), MIN(toppress), MAX(lowPress), MIN(lowPress), MAX(pulse), MIN(Pulse) FROM params WHERE patientid=" + pacientID + " AND unixtime>UNIX_TIMESTAMP()-7*24*60*60;";
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
@@ -563,7 +563,9 @@ namespace HahaServer
 
                             if (reader[0].ToString().Equals(reader[1].ToString()) || reader[2].ToString().Equals(reader[3].ToString()) || reader[4].ToString().Equals(reader[5].ToString()))
                             {
-                                Notify?.Invoke("У пользователя недостаточно измерений " + reader[0].ToString());
+
+                                Notify?.Invoke("У пользователя недостаточно измерений.");
+
                             }
                             else
                             {
