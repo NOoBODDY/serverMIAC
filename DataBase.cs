@@ -156,6 +156,7 @@ namespace HahaServer
 
         public Patient.Params getAverageParams(string tokenOrPhoneOrSnils)
         {
+            Notify?.Invoke("Started getAverageParams");
             List<Patient.Params> paramses = new List<Patient.Params>();
             Patient.Params param = new Patient.Params(0, 0, 0, 0, 0);
             Patient patient = null;
@@ -237,6 +238,7 @@ namespace HahaServer
         /// <param name="phone"></param>
         public bool isExistsPatient(string phone)
         {
+            Notify?.Invoke("Started isExistsPatient");
             try
             {
                 using (ConnectionDef)
@@ -278,7 +280,7 @@ namespace HahaServer
         /// <param name="codenum"></param>
         public void authPatient(string phone, string codenum)
         {
-
+            Notify?.Invoke("Started authPatient");
             if (isExistsPatient(phone))
             {
                 using (ConnectionDef)
@@ -316,6 +318,7 @@ namespace HahaServer
         /// <returns></returns>
         public string getPatientToken(string phone)
         {
+            Notify?.Invoke("Started getPatientToken");
             Notify?.Invoke("Ищем токен пользователя с номером телефона " + phone);
             string token = null;
             try
@@ -409,6 +412,7 @@ namespace HahaServer
         /// <returns></returns>
         public bool checkAuth(string phone, string codenum)
         {
+            Notify?.Invoke("Started checkAuth");
             try
             {
                 using (ConnectionDef)
@@ -448,7 +452,7 @@ namespace HahaServer
         /// <param name="doctorID"></param>
         private void addPatient(string phone, string token, string phonecode)
         {
-
+            Notify?.Invoke("Started addPatient");
             try
             {
                 using (ConnectionDef)
@@ -482,7 +486,7 @@ namespace HahaServer
         /// <param name="doctorID"></param>
         public void addPatient(string phone, int doctorID, string firstName, string surname, string lastName = null)
         {
-
+            Notify?.Invoke("Started addPatient");
             try
             {
                 using (ConnectionDef)
@@ -530,6 +534,7 @@ namespace HahaServer
         /// <param name="Pulse"></param>
         public void addInfoPatient(string token, int topPress, int lowPress, int Pulse, int saturation, long unixtime, string tag)
         {
+            Notify?.Invoke("Started addInfoPatient");
             int patientID = 0;
             try
             {
@@ -567,7 +572,7 @@ namespace HahaServer
         /// <param name="patientID"></param>     
         public Patient getHistoryParams(string token)
         {
-
+            Notify?.Invoke("Started getHistoryParams");
             try
             {
                 using (ConnectionDef)
@@ -629,6 +634,7 @@ namespace HahaServer
         /// <param name="lastName"></param>
         public void addDoctor(string login, string pass, string firstName, string surname, string lastName = null)
         {
+            Notify?.Invoke("Started addDoctor");
             if (isConnected)
             {
                 try
@@ -666,6 +672,7 @@ namespace HahaServer
         /// <param name="doctorID"></param>
         public List<Patient> getPatientList(int doctorID)
         {
+            Notify?.Invoke("Started getPatientList");
             List<Patient> patients = new List<Patient>();
             if (isConnected)
             {
@@ -712,6 +719,7 @@ namespace HahaServer
         /// <param name="text"></param>
         public void MessageFromPacient(int patientID, string text)
         {
+            Notify?.Invoke("Started MessageFromPacient");
             if (isConnected)
             {
                 List<int> doctorsID = new List<int>();
@@ -752,6 +760,7 @@ namespace HahaServer
 
         public List<Patient> getPatients(string[] snilses)
         {
+            Notify?.Invoke("Started getPatients");
             List<Patient> patients = new List<Patient>();
             if (isConnected)
             {
@@ -802,8 +811,8 @@ namespace HahaServer
         /// <param name="sender"></param>
         public void getHistoryMessages(int patientID, int doctorID)
         {
-            if (isConnected)
-            {
+            Notify?.Invoke("Started getHistoryMessages");
+            
 
                 try
                 {
@@ -823,11 +832,8 @@ namespace HahaServer
                 {
                     Notify?.Invoke(e.Message);
                 }
-            }
-            else
-            {
-                Notify?.Invoke("Нет подключения к БД");
-            }
+            
+            
         }
 
         //Работает
