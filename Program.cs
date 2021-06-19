@@ -308,6 +308,8 @@ namespace HahaServer
                 Console.WriteLine("Получаем пациента");
                 Patient patient = dataBase.getPatient(phone);
 
+                Patient.Params average = dataBase.getAverageParams(phone);
+
                 JObject param = new JObject();
 
                 param.Add("id", patient.Id);
@@ -315,6 +317,10 @@ namespace HahaServer
                 param.Add("surname", patient.SurName);
                 param.Add("lastname", patient.LastName);
                 param.Add("snils", patient.Snils);
+                param.Add("aTop", average.TopPress);
+                param.Add("aLow", average.LowPress);
+                param.Add("aPulse", average.Pulse);
+                param.Add("aSaturation", average.Saturation);
                 response.Add("patient", param);
             }
             else
@@ -445,6 +451,7 @@ namespace HahaServer
         {
 
         }*/
+
 
     }
 }
