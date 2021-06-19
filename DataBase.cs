@@ -524,21 +524,31 @@ namespace HahaServer
         /// <summary>
         /// Добавляем статистику пациента
         /// </summary>
-        /// <param name="patientID"></param>
+        /// <param name="token"></param>
         /// <param name="topPress"></param>
         /// <param name="lowPress"></param>
         /// <param name="Pulse"></param>
-        public void addInfoPatient(int patientID, int topPress, int lowPress, int Pulse, int saturation)
+        public void addInfoPatient(string token, int topPress, int lowPress, int Pulse, int saturation)
         {
+            int patientID = 0;
             try
             {
                 using (ConnectionDef)
                 {
                     ConnectionDef.Open();
                     string request;
+                    request = "SELECT id from patient where token=\"" + token + "\";";
+                    MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
+                    using (reader = cmdSel.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            patientID = Int32.Parse(reader[0].ToString());
+                        }
+                    }
                     request = "INSERT INTO params (patientId, unixtime, topPress, lowPress,pulse, saturation) VALUES " +
                         "(" + patientID + "," + DateTimeOffset.Now.ToUnixTimeSeconds().ToString() + "," + topPress + "," + lowPress + "," + Pulse + "," + saturation + ");";
-                    MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
+                    cmdSel = new MySqlCommand(request, ConnectionDef);
                     cmdSel.ExecuteNonQuery();
                     Notify?.Invoke("Измерение пользователя " + patientID + " добавлено");
                 }
@@ -555,7 +565,7 @@ namespace HahaServer
         /// Получаем историю, нужно поменять возвращаемый тип
         /// </summary>
         /// <param name="patientID"></param>     
-        public Patient getHistoryParams(int patientID)
+        public Patient getHistoryParams(string token)
         {
 
             try
@@ -564,7 +574,7 @@ namespace HahaServer
                 {
                     ConnectionDef.Open();
                     string request;
-                    request = "SELECT id, firstname, surname, lastname, phonenum, token FROM patient WHERE id=" + patientID + ";";
+                    request = "SELECT id, firstname, surname, lastname, phonenum, token FROM patient WHERE token=\"" + token + "\";";
                     MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
                     Patient patient;
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
@@ -574,14 +584,15 @@ namespace HahaServer
                             string s = reader[0].ToString();
                             int id = Int32.Parse(s);
                             patient = new Patient(Int32.Parse(reader[0].ToString()), reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString());
-                            Notify?.Invoke("Пользователь с ID " + patientID + " найден: " + patient.toString());
+                            Notify?.Invoke("Пользователь с токеном " + token + " найден: " + patient.toString());
                         }
                         else
                         {
-                            Notify?.Invoke("Пользователь с ID " + patientID + " не найден");
+                            Notify?.Invoke("Пользователь с токеном" + token + " не найден");
                             return null;
                         }
                     }
+                    int patientID = patient.Id;
                     request = "SELECT lowpress, toppress, pulse, unixtime FROM params WHERE patientid=" + patientID + ";";
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
