@@ -13,19 +13,26 @@ namespace HahaServer
     {
         #region vars
         List<Params> parametres = new List<Params>();//лист с измерениями
-        private int id = 0;
-        private string firstName = "";
-        private string surName = "";
-        private string lastName = "";
-        private string token = "";
-        private string phone = "";
-        private string snils = "";
+        private int id;
+        private string firstName;
+        private string surName;
+        private string lastName;
+        private string token;
+        private string phone;
+        private string snils;
+        public int Id { get { return id; } private set { id = value; } }
+        public string FirstName { get { return firstName; } private set { firstName = value; } }
+        public string SurName { get { return this.surName; } private set { surName = value; } }
+        public string LastName { get { return this.lastName; } private set { lastName = value; } }
+        public string Token { get { return this.token; } private set { token = value; } }
+        public string Phone { get { return this.phone; } private set { phone = value; } }
+        public string Snils { get { return this.snils; } private set { snils = value; } }
         #endregion
-
         public Patient(int id, string firstName, string surName, string lastName, string token, string phone)
         {
-            this.id = id;
             this.firstName = firstName;
+            this.id = id;
+
             this.surName = surName;
             this.lastName = lastName;
             this.token = token;
@@ -33,28 +40,22 @@ namespace HahaServer
         }
         public Patient(string phone, string token)
         {
-            this.phone = phone;
-            this.token = token;
+            Phone = phone;
+            Token = token;
         }
 
         public Patient(int id, string firstName, string surName, string lastName, string token, string phone, string snils)
         {
-            this.id = id;
-            this.firstName = firstName;
-            this.surName = surName;
-            this.lastName = lastName;
-            this.token = token;
-            this.phone = phone;
-            this.snils = snils;
+            Id = id;
+            FirstName = firstName;
+            SurName = surName;
+            LastName = lastName;
+            Token = token;
+            Phone = phone;
+            Snils = snils;
         }
         #region getInfo
 
-        public string getFirstName() { return this.firstName; }
-        public string getSurName() { return this.surName; }
-        public string getLastName() { return this.lastName; }
-        public string getPhone() { return this.phone; }
-        public int getId() { return this.id; }
-        public string getToken() { return this.token; }
         /// <summary>
         /// Получить все измерения пациента
         /// </summary>
@@ -66,7 +67,7 @@ namespace HahaServer
         /// <returns></returns>
         public string toString()
         {
-            return id.ToString() + " " + firstName + " " + surName + " " + lastName + " " + token + " " + phone;
+            return Id.ToString() + " " + FirstName + " " + SurName + " " + LastName + " " + Token + " " + Phone;
         }
         #endregion
 
@@ -85,29 +86,32 @@ namespace HahaServer
         /// </summary>
         public class Params
         {
-            int lowPress;
-            int topPress;
-            int pulse;
-            int saturation = 0;
-            long unixtime;
+            private int lowPress;
+            private int topPress;
+            private int pulse;
+            private int saturation;
+            private long unixtime;
+            public int LowPress { get { return this.lowPress; } private set { this.lowPress = value; } }
+            public int TopPress { get { return this.topPress; } private set { this.topPress = value; } }
+            public int Pulse { get { return this.pulse; } private set { this.pulse = value; } }
+            public int Saturation { get { return this.saturation; } private set { this.saturation = value; } }
+            public long Unixtime { get { return this.unixtime; } private set { this.unixtime = value; } }
             public Params(int lowpress, int toppress, int pulse, long unixtime, int saturation = 0)
             {
-                this.lowPress = lowpress;
-                this.topPress = toppress;
-                this.pulse = pulse;
-                this.unixtime = unixtime;
+                this.LowPress = lowpress;
+                this.TopPress = toppress;
+                this.Pulse = pulse;
+                this.Unixtime = unixtime;
                 if (saturation != 0)
                 {
-                    this.saturation = saturation;
+                    this.Saturation = saturation;
                 }
             }
             public string toString()
             {
                 return lowPress.ToString() + " " + topPress.ToString() + " " + pulse.ToString() + " " + unixtime.ToString();
             }
-            public int getLowPress() { return this.lowPress; }
-            public int getTopPress() { return this.topPress; }
-            public int getPulse() { return this.pulse; }
+
         }
 
     }
@@ -127,18 +131,18 @@ namespace HahaServer
         public DataBase(string ServerIP, string Login, string NameBD, string Password)
         {
 
-            conn_string.Server = "127.0.0.1";
-            conn_string.Port = 3306;
-            conn_string.UserID = "root";
-            conn_string.Password = "qort0408";
-            conn_string.Database = "mydb";
-
-
             //conn_string.Server = "127.0.0.1";
             //conn_string.Port = 3306;
             //conn_string.UserID = "root";
             //conn_string.Password = "qort0408";
-            //conn_string.Database = "hakaton1806";
+            //conn_string.Database = "mydb";
+
+
+            conn_string.Server = "127.0.0.1";
+            conn_string.Port = 3306;
+            conn_string.UserID = "root";
+            conn_string.Password = "qort0408";
+            conn_string.Database = "hakaton1806";
 
 
 
@@ -150,7 +154,82 @@ namespace HahaServer
 
         #region ForPatient
 
+        public Patient.Params getAverageParams(string tokenOrPhoneOrSnils)
+        {
+            List<Patient.Params> paramses = new List<Patient.Params>();
+            Patient.Params param = new Patient.Params(0, 0, 0, 0, 0);
+            Patient patient = null;
 
+            try
+            {
+                using (ConnectionDef)
+                {
+                    ConnectionDef.Open();
+                    string request = "";
+                    switch (tokenOrPhoneOrSnils.Length)
+                    {
+                        case 32:
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient " +
+                           "WHERE token=\"" + tokenOrPhoneOrSnils + "\";";
+                            break;
+                        case 11:
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient " +
+                           "WHERE phonenum=\"" + tokenOrPhoneOrSnils + "\";";
+                            break;
+                        case 14:
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient" +
+                           "WHERE snils=\"" + tokenOrPhoneOrSnils + "\";";
+                            break;
+                        default: throw new Exception("Введен неккоректный аргумент");
+                    }
+                    MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
+                    using (MySqlDataReader reader = cmdSel.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            patient = new Patient(Int32.Parse(reader[0].ToString()), reader[1].ToString(),
+                                reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), reader[6].ToString());
+                        }
+                        else
+                        {
+                            Notify?.Invoke("Пациент не найден");
+                        }
+                    }
+                    request = "SELECT lowpress, topPress, pulse, unixtime, saturation FROM params where patientid =+" + patient.Id + "+ AND unixtime>(UNIX_TIMESTAMP()-7*24*60*60);";
+
+                    using (MySqlDataReader reader = cmdSel.ExecuteReader())
+                    {
+
+                        while (reader.Read())
+                        {
+                            Patient.Params par = new Patient.Params(Int32.Parse(reader[0].ToString()),
+                                Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()), Int32.Parse(reader[3].ToString()), Int32.Parse(reader[4].ToString()));
+                            paramses.Add(par);
+                        }
+
+                    }
+                    int lowPress = 0, topPress = 0, pulse = 0, satiration = 0, unixtime = 0;
+                    foreach (Patient.Params i in paramses)
+                    {
+                        lowPress += i.LowPress;
+                        topPress += i.TopPress;
+                        satiration += i.Saturation;
+
+                    }
+                    lowPress = lowPress / paramses.Count;
+                    topPress = topPress / paramses.Count;
+                    satiration = satiration / paramses.Count;
+                    param = new Patient.Params(lowPress, topPress, pulse, unixtime, satiration);
+
+                }
+
+            }
+            catch (Exception e)
+            {
+                Notify?.Invoke(e.Message);
+            }
+            return param;
+        }
 
         /// <summary>
         /// Проверить существует ли пациент
@@ -251,7 +330,7 @@ namespace HahaServer
                     MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
-                        Notify?.Invoke("Ищем токен пользователя с номером телефона " + phone +" \nДа где он там?????");
+                        Notify?.Invoke("Ищем токен пользователя с номером телефона " + phone + " \nДа где он там?????");
                         if (reader.Read())
                         {
                             token = reader[0].ToString();
@@ -449,12 +528,13 @@ namespace HahaServer
         /// <param name="topPress"></param>
         /// <param name="lowPress"></param>
         /// <param name="Pulse"></param>
-        public void addInfoPatient(int patientID, int topPress, int lowPress, int Pulse, string saturation = null)
+        public void addInfoPatient(int patientID, int topPress, int lowPress, int Pulse, int saturation)
         {
             try
             {
                 using (ConnectionDef)
                 {
+                    ConnectionDef.Open();
                     string request;
                     request = "INSERT INTO params (patientId, unixtime, topPress, lowPress,pulse, saturation) VALUES " +
                         "(" + patientID + "," + DateTimeOffset.Now.ToUnixTimeSeconds().ToString() + "," + topPress + "," + lowPress + "," + Pulse + "," + saturation + ");";
@@ -477,11 +557,12 @@ namespace HahaServer
         /// <param name="patientID"></param>     
         public Patient getHistoryParams(int patientID)
         {
-            
+
             try
             {
-                using(ConnectionDef)
+                using (ConnectionDef)
                 {
+                    ConnectionDef.Open();
                     string request;
                     request = "SELECT id, firstname, surname, lastname, phonenum, token FROM patient WHERE id=" + patientID + ";";
                     MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
@@ -490,6 +571,8 @@ namespace HahaServer
                     {
                         if (reader.Read())
                         {
+                            string s = reader[0].ToString();
+                            int id = Int32.Parse(s);
                             patient = new Patient(Int32.Parse(reader[0].ToString()), reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString());
                             Notify?.Invoke("Пользователь с ID " + patientID + " найден: " + patient.toString());
                         }
@@ -679,7 +762,7 @@ namespace HahaServer
                         }
                     }
 
-                    int patientid = patient.getId();
+                    int patientid = patient.Id;
                     request = "SELECT lowpress,toppress, pulse, unixtime,saturation FROM params WHERE patientid = " + patient + ";";
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
