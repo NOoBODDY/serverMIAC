@@ -362,7 +362,9 @@ namespace HahaServer
 
         public Patient getPatient(string tokenOrPhoneOrSnils)
         {
+            Notify?.Invoke("Started getPatient");
             Patient patient = null;
+            string type;
             try
             {
                 using (ConnectionDef)
@@ -374,14 +376,17 @@ namespace HahaServer
                         case 32:
                             request = "SELECT id, firstname, surname,lastname,token,phonenum,snils " +
                            "WHERE token=\"" + tokenOrPhoneOrSnils + "\";";
+                            type = "токену";
                             break;
                         case 11:
                             request = "SELECT id, firstname, surname,lastname,token,phonenum,snils " +
                            "WHERE phonenum=\"" + tokenOrPhoneOrSnils + "\";";
+                            type = "номеру телефона";
                             break;
                         case 14:
                             request = "SELECT id, firstname, surname,lastname,token,phonenum,snils " +
                            "WHERE snils=\"" + tokenOrPhoneOrSnils + "\";";
+                            type = "снилсу";
                             break;
                         default: throw new Exception("Введен неккоректный аргумент");
                     }
@@ -390,6 +395,7 @@ namespace HahaServer
                     {
                         if (reader.Read())
                         {
+                            Notify?.Invoke("Пациент найден по "+type+" " + tokenOrPhoneOrSnils);
                             patient = new Patient(Int32.Parse(reader[0].ToString()), reader[1].ToString(),
                                 reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), reader[6].ToString());
                         }
