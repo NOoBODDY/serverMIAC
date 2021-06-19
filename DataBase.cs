@@ -528,7 +528,7 @@ namespace HahaServer
         /// <param name="topPress"></param>
         /// <param name="lowPress"></param>
         /// <param name="Pulse"></param>
-        public void addInfoPatient(string token, int topPress, int lowPress, int Pulse, int saturation)
+        public void addInfoPatient(string token, int topPress, int lowPress, int Pulse, int saturation, long unixtime, string tag)
         {
             int patientID = 0;
             try
@@ -546,8 +546,8 @@ namespace HahaServer
                             patientID = Int32.Parse(reader[0].ToString());
                         }
                     }
-                    request = "INSERT INTO params (patientId, unixtime, topPress, lowPress,pulse, saturation) VALUES " +
-                        "(" + patientID + "," + DateTimeOffset.Now.ToUnixTimeSeconds().ToString() + "," + topPress + "," + lowPress + "," + Pulse + "," + saturation + ");";
+                    request = "INSERT INTO params (patientId, unixtime, topPress, lowPress,pulse, saturation, tag) VALUES " +
+                        "(" + patientID + "," + unixtime + "," + topPress + "," + lowPress + "," + Pulse + "," + saturation + ",\""+tag+"\");";
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     cmdSel.ExecuteNonQuery();
                     Notify?.Invoke("Измерение пользователя " + patientID + " добавлено");
