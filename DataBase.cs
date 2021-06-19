@@ -205,7 +205,6 @@ namespace HahaServer
                         if (reader.HasRows) //Если есть данные
                         {
                             reader.Read();
-                            int lowpress = Convert.ToInt32(Double.Parse(reader[0].ToString()));
                             param = new Patient.Params(0, Convert.ToInt32(Double.Parse(reader[0].ToString())), Convert.ToInt32(Double.Parse(reader[1].ToString())),
                                 Convert.ToInt32(Double.Parse(reader[2].ToString())), 0, "aboba", Convert.ToInt32(Double.Parse(reader[3].ToString())));
                         }
@@ -320,21 +319,18 @@ namespace HahaServer
             string token = null;
             try
             {
-                Notify?.Invoke("До сих пор ищем токен пользователя с номером телефона " + phone);
                 using (ConnectionDef)
                 {
-                    Notify?.Invoke("Ещё не нашли токен пользователя с номером телефона " + phone);
                     ConnectionDef.Open();
                     string request;
                     request = "SELECT token FROM patient WHERE phonenum=\"" + phone + "\";";
                     MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
-                        Notify?.Invoke("Ищем токен пользователя с номером телефона " + phone + " \nДа где он там?????");
                         if (reader.Read())
                         {
                             token = reader[0].ToString();
-                            Notify?.Invoke("Найден токен " + token + " пользователя с номером телефона " + phone);
+                            Notify?.Invoke("Token " + token + " found by using phone " + phone);
                         }
                     }
                 }
@@ -569,7 +565,12 @@ namespace HahaServer
                             }
                             else
                             {
-                                res = reader[0].ToString() + " " + reader[1].ToString() + " " + reader[2].ToString() + " " + reader[3].ToString() + " " + reader[4].ToString() + " " + reader[5].ToString();
+                                res = Convert.ToInt32((Double.Parse(reader[0].ToString()) * 1.2)) + " " +
+                                    Convert.ToInt32((Double.Parse(reader[1].ToString()) * 0.8)) + " " +
+                                    Convert.ToInt32((Double.Parse(reader[2].ToString()) * 1.2)) + " " +
+                                    Convert.ToInt32((Double.Parse(reader[3].ToString()) * 0.8)) + " " +
+                                    Convert.ToInt32((Double.Parse(reader[4].ToString()) * 1.2)) + " " +
+                                    Convert.ToInt32((Double.Parse(reader[5].ToString()) * 0.8));
                             }
                         }
                         else
@@ -584,7 +585,7 @@ namespace HahaServer
                 Notify?.Invoke(e.Message);
                 Notify?.Invoke("Aborted getScope");
             }
-            Notify?.Invoke("ShoosenScope: " + res);
+            Notify?.Invoke("Choosen Scope: " + res);
             Notify?.Invoke("Stoped getScope");
             return res;
         }
