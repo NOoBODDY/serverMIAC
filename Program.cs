@@ -5,10 +5,9 @@ using System.Threading;
 using Newtonsoft.Json.Linq;
 using System.Drawing.Imaging;
 using System.Drawing;
-using IronPython.Hosting;
-using Microsoft.Scripting.Hosting;
 using System.Linq;
 using System.Collections;
+using System.Diagnostics;
 
 namespace HahaServer
 {
@@ -40,8 +39,8 @@ namespace HahaServer
             listener.Stop();
             Console.WriteLine("Обработка подключений завершена");
             Console.Read();*/
-            
-           
+
+
         }
         static void menu(Thread main_thread)
         {
@@ -62,6 +61,9 @@ namespace HahaServer
                     case "shutdown":
                         working = false;
                         main_thread.Abort();
+                        break;
+                    case "test anal":
+                        Console.WriteLine(photoAnalize("1cac447de0804e52abbf74ab41749678", Convert.ToBase64String(File.ReadAllBytes("t2.jpg"))));
                         break;
                     default:
                         Console.WriteLine("unknown command");
@@ -120,12 +122,12 @@ namespace HahaServer
             listener.Prefixes.Add("http://80.87.192.94:80/connection/");
             listener.Start();
 
-            while(true)
+            while (true)
             {
                 // метод GetContext блокирует текущий поток, ожидая получение запроса 
                 HttpListenerContext context = listener.GetContext();
                 Thread newRequest = new Thread(new ParameterizedThreadStart(solveRequest));
-                
+
                 newRequest.Start(context);
             }
 
@@ -134,7 +136,7 @@ namespace HahaServer
         /// Обработка запросов. В отдельный поток
         /// </summary>
         /// <param name="x"></param>
-        static void solveRequest(object x ) //метод-поток
+        static void solveRequest(object x) //метод-поток
         {
             string jsonRpc;
             HttpListenerContext context = (HttpListenerContext)x;
@@ -151,7 +153,7 @@ namespace HahaServer
             try
             {
                 JObject requestDeserialized = JObject.Parse(jsonRpc);
-                
+
                 switch (requestDeserialized.SelectToken("method").ToString())
                 {
                     case "sendSMS":
@@ -159,7 +161,7 @@ namespace HahaServer
                         break;
                     case "pinCheck":
                         response = pinCheck(requestDeserialized.SelectToken("params").SelectToken("pin").ToString(), requestDeserialized.SelectToken("params").SelectToken("phone").ToString());
-                    break;
+                        break;
                     case "getHistory":
                         response = getHistory(requestDeserialized.SelectToken("params").SelectToken("token").ToString());
                         break;
@@ -179,6 +181,7 @@ namespace HahaServer
                     default:
                         response = unKnownMethod(requestDeserialized.SelectToken("method").ToString());
                         Console.WriteLine("Пришел неизвестный метод");
+                        Console.WriteLine(jsonRpc);
                         break;
                 }
             }
@@ -186,7 +189,7 @@ namespace HahaServer
             {
                 response = "";
             }
-            
+
             // получаем объект ответа
             HttpListenerResponse responseHttp = context.Response;
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(response);
@@ -205,7 +208,7 @@ namespace HahaServer
         static string unKnownMethod(string method)
         {
             JObject param = new JObject();
-            param.Add("message","unkmown method");
+            param.Add("message", "unkmown method");
             JObject response = new JObject();
             response.Add("jsonrpc", "2.0");
             //response.Add("id", 1);
@@ -224,11 +227,11 @@ namespace HahaServer
         static string sendSMS(string phone)
         {
             DataBase dataBase = null;
-            try 
+            try
             {
                 dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
@@ -239,13 +242,13 @@ namespace HahaServer
 
             phone = String.Join("", phone.Split('+', ' ', '-')); //удаляем парашу
             Random random = new Random();
-            
+
             int queue = random.Next(100);
             string pin = "";
-            for (int i=0; i < 4; i++) //генерируем пин
+            for (int i = 0; i < 4; i++) //генерируем пин
             {
                 Random rnd = new Random();
-                pin+=rnd.Next(0, 10).ToString();
+                pin += rnd.Next(0, 10).ToString();
             }
             bool reg = dataBase.isExistsPatient(phone);
             SMSAERO sms = new SMSAERO();
@@ -261,9 +264,9 @@ namespace HahaServer
             }
             dataBase.authPatient(phone, pin); // авторизация пользователя
 
-            
-            
-            
+
+
+
 
             JObject response = new JObject();
             if (reg)
@@ -280,7 +283,7 @@ namespace HahaServer
 
         static string pinCheck(string pin, string phone)
         {
-            
+
             JObject response = new JObject();
             phone = String.Join("", phone.Split('+', ' ', '-')); //удаляем парашу
             DataBase dataBase = null;
@@ -296,17 +299,17 @@ namespace HahaServer
             {
                 dataBase.Notify += messaging;
             }
-            
+
             if (dataBase.checkAuth(phone, pin))
             {
                 response.Add("type", "approved");
-                
+
                 response.Add("token", dataBase.getPatientToken(phone));
                 Console.WriteLine("Получаем пациента");
                 Patient patient = dataBase.getPatient(phone);
-                
+
                 JObject param = new JObject();
-                
+
                 param.Add("id", patient.Id);
                 param.Add("firstname", patient.FirstName);
                 param.Add("surname", patient.SurName);
@@ -336,17 +339,17 @@ namespace HahaServer
             {
                 dataBase.Notify += messaging;
             }
-            
+
             Patient patient = dataBase.getHistoryParams(token);
             //Console.WriteLine("тут");
             JObject response = new JObject();
-            
+
             response.Add(patient.getParams());
             Console.WriteLine(response.ToString());
             return response.ToString();
         }
 
-        static string setData (string token, int topPress, int lowPress, int pulse, int saturation, long unixtime, string tag)
+        static string setData(string token, int topPress, int lowPress, int pulse, int saturation, long unixtime, string tag)
         {
             JObject response = new JObject();
             //Console.WriteLine("Пациента надо найти");
@@ -364,7 +367,7 @@ namespace HahaServer
             {
                 dataBase.Notify += messaging;
             }
-            
+
             Patient patient = dataBase.getPatient(token);
             //Console.WriteLine("Пациента нашли");
             try
@@ -372,16 +375,16 @@ namespace HahaServer
                 dataBase.addInfoPatient(token, topPress, lowPress, pulse, saturation, unixtime, tag);
                 response.Add("type", "done");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 response.Add("err", ex.Message);
             }
             //Console.WriteLine("ответ готов");
             return response.ToString();
-            
+
         }
 
-        static string photoAnalize (string token, string basePhoto)
+        static string photoAnalize(string token, string basePhoto)
         {
             string name = "tonometr";
             DataBase dataBase = null;
@@ -401,27 +404,35 @@ namespace HahaServer
             string input = dataBase.getScope(token);
 
             var param = input.Split(' ');
-            var image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto)));
-            bool flag = true;
-            int i = 1;
-            while (flag)
-            {
-                FileInfo fileInf = new FileInfo(name + ".jpg");
-                if (fileInf.Exists)
-                {
-                    name += i.ToString();
-                }
-                else
-                {
-                    image.Save(name + ".jpg", ImageFormat.Jpeg);
-                }
-            }
-            ScriptEngine engine = Python.CreateEngine();
-            ScriptScope scope = engine.CreateScope();
+            //var image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto)));
+            //bool flag = true;
+            //int i = 1;
+            //while (flag)
+            //{
+            //    FileInfo fileInf = new FileInfo(name + ".jpg");
+            //    if (fileInf.Exists)
+            //    {
+            //        name += i.ToString();
+            //    }
+            //    else
+            //    {
+            //        image.Save(name + ".jpg", ImageFormat.Jpeg);
+            //    }
+            //}
+            ProcessStartInfo procStartInfo = new ProcessStartInfo("python3", "main.py t2.jpg 120 200 60 130 50 200");
+            procStartInfo.RedirectStandardOutput = true;
+            procStartInfo.UseShellExecute = false;
+            procStartInfo.CreateNoWindow = true;
 
-            engine.ExecuteFile("main.py", scope);
-            dynamic function = scope.GetVariable("recognize_digits");
-            dynamic result = function(name + ".jpg", param[1], param[0], param[3], param[2], param[5], param[4]);
+            System.Diagnostics.Process proc = new System.Diagnostics.Process();
+            proc.StartInfo = procStartInfo;
+            proc.Start();
+            String result = proc.StandardOutput.ReadToEnd();
+            proc.WaitForExit();
+            Console.WriteLine("Получаем это: " + result);
+
+            //dynamic result = function(name + ".jpg", 70, 130, 50, 100, 50, 200);
+            //dynamic result = function(name + ".jpg", param[1], param[0], param[3], param[2], param[5], param[4]);
 
             return null;
         }
