@@ -374,18 +374,21 @@ namespace HahaServer
                     switch (tokenOrPhoneOrSnils.Length)
                     {
                         case 32:
-                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient" +
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient " +
                            "WHERE token=\"" + tokenOrPhoneOrSnils + "\";";
                             type = "токену";
+                            Notify?.Invoke("Поиск по номеру токену");
                             break;
                         case 11:
-                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient" +
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient " +
                            "WHERE phonenum=\"" + tokenOrPhoneOrSnils + "\";";
                             type = "номеру телефона";
+                            Notify?.Invoke("Поиск по номеру телефона");
                             break;
                         case 14:
-                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient" +
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient " +
                            "WHERE snils=\"" + tokenOrPhoneOrSnils + "\";";
+                            Notify?.Invoke("Поиск по снилсу");
                             type = "снилсу";
                             break;
                         default: throw new Exception("Введен неккоректный аргумент");
