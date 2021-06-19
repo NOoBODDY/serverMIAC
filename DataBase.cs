@@ -826,7 +826,6 @@ namespace HahaServer
         /// <summary>
         /// Проверка, есть ли подключение
         /// </summary>
-        /// <returns></returns>
         public bool isConnect()
         {
             return isConnected;
