@@ -158,7 +158,14 @@ namespace HahaServer
                         response = getHistory(requestDeserialized.SelectToken("params").SelectToken("token").ToString());
                         break;
                     case "setData":
-                        response = setData(requestDeserialized.SelectToken("params").SelectToken("token").ToString(), Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("topPress")), Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("lowPress")), Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("pulse")), Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("saturation")));
+                        response = setData(requestDeserialized.SelectToken("params").SelectToken("token").ToString(),
+                            Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("topPress")),
+                            Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("lowPress")),
+                            Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("pulse")),
+                            Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("saturation")),
+                            Convert.ToInt64(requestDeserialized.SelectToken("params").SelectToken("unixtime")),
+                            requestDeserialized.SelectToken("params").SelectToken("tag").ToString()
+                            ); ;
                         break;
                     default:
                         response = unKnownMethod(requestDeserialized.SelectToken("method").ToString());
@@ -321,7 +328,7 @@ namespace HahaServer
             return response.ToString();
         }
 
-        static string setData (string token, int topPress, int lowPress, int pulse, int saturation)
+        static string setData (string token, int topPress, int lowPress, int pulse, int saturation, long unixtime, string tag)
         {
             JObject response = new JObject();
             DataBase dataBase = null;
@@ -342,7 +349,7 @@ namespace HahaServer
             Patient patient = dataBase.getPatient(token);
             try
             {
-                dataBase.addInfoPatient(token, topPress, lowPress, pulse, saturation);
+                dataBase.addInfoPatient(token, topPress, lowPress, pulse, saturation, unixtime, tag);
                 response.Add("type", "done");
             }
             catch(Exception ex)
