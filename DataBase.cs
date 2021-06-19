@@ -140,7 +140,7 @@ namespace HahaServer
             conn_string.UserID = "root";
             conn_string.Password = "qort0408";
             conn_string.Database = "mydb";
-            conn_string.Database = "hakaton1806";
+            //conn_string.Database = "hakaton1806";
 
 
 
@@ -588,14 +588,17 @@ namespace HahaServer
             Notify?.Invoke("Stoped getScope");
             return res;
         }
-        //Работает
+
         /// <summary>
-        /// Добавляем статистику пациента
+        /// Добавляем измерение пациента
         /// </summary>
         /// <param name="token"></param>
         /// <param name="topPress"></param>
         /// <param name="lowPress"></param>
         /// <param name="Pulse"></param>
+        /// <param name="saturation"></param>
+        /// <param name="unixtime"></param>
+        /// <param name="tag"></param>
         public void addInfoPatient(string token, int topPress, int lowPress, int Pulse, int saturation, long unixtime, string tag)
         {
             Notify?.Invoke("Started addInfoPatient");
@@ -630,7 +633,6 @@ namespace HahaServer
             Notify?.Invoke("Stopped addInfoPatient");
         }
 
-        //Надо обсудить что отправляет приложение
         /// <summary>
         /// Получаем историю, нужно поменять возвращаемый тип
         /// </summary>
@@ -903,60 +905,7 @@ namespace HahaServer
 
         }
 
-        //Работает
-        #region Connecting
 
 
-        /// <summary>
-        /// Проверка, есть ли подключение
-        /// </summary>
-        public bool isConnect()
-        {
-            return isConnected;
-        }
-        /// <summary>
-        /// Создаём соединение
-        /// </summary>
-        /// <returns></returns>
-        public bool connect()
-        {
-            if (!isConnected)
-            {
-                try
-                {
-                    ConnectionDef.Open();
-                    Notify?.Invoke("Подключение установлено");
-                    isConnected = true;
-                }
-                catch (Exception e)
-                {
-                    Notify?.Invoke(e.Message);
-
-                    return false;
-                }
-                return true;
-            }
-            else
-            {
-                Notify?.Invoke("Подключение уже установлено");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Закрыть соединение
-        /// </summary>
-        public void closeCon()
-        {
-            if (isConnected)
-            {
-                ConnectionDef.Close();
-                isConnected = false;
-                Notify?.Invoke("Соединение с БД разорвано");
-            }
-            else Notify?.Invoke("Нет подключения к БД");
-        }
-
-        #endregion
     }
 }
