@@ -282,11 +282,11 @@ namespace HahaServer
                 response.Add("token", dataBase.getPatientToken(phone));
                 Patient patient = dataBase.getPatient(phone);
                 JObject param = new JObject();
-                param.Add("id", patient.getId());
-                param.Add("firstname", patient.getFirstName());
-                param.Add("surname", patient.getSurName());
-                param.Add("lastname", patient.getLastName());
-                //param.Add("snils", patient.getSnils());
+                param.Add("id", patient.Id);
+                param.Add("firstname", patient.FirstName);
+                param.Add("surname", patient.SurName);
+                param.Add("lastname", patient.LastName);
+                param.Add("snils", patient.Snils);
                 response.Add("patient", param);
             }
             else
