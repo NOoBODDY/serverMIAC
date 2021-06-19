@@ -374,17 +374,17 @@ namespace HahaServer
                     switch (tokenOrPhoneOrSnils.Length)
                     {
                         case 32:
-                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils " +
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient" +
                            "WHERE token=\"" + tokenOrPhoneOrSnils + "\";";
                             type = "токену";
                             break;
                         case 11:
-                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils " +
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient" +
                            "WHERE phonenum=\"" + tokenOrPhoneOrSnils + "\";";
                             type = "номеру телефона";
                             break;
                         case 14:
-                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils " +
+                            request = "SELECT id, firstname, surname,lastname,token,phonenum,snils FROM patient" +
                            "WHERE snils=\"" + tokenOrPhoneOrSnils + "\";";
                             type = "снилсу";
                             break;
