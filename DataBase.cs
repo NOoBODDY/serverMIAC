@@ -131,18 +131,18 @@ namespace HahaServer
         public DataBase(string ServerIP, string Login, string NameBD, string Password)
         {
 
-            //conn_string.Server = "127.0.0.1";
-            //conn_string.Port = 3306;
-            //conn_string.UserID = "root";
-            //conn_string.Password = "qort0408";
-            //conn_string.Database = "mydb";
-
-
             conn_string.Server = "127.0.0.1";
             conn_string.Port = 3306;
             conn_string.UserID = "root";
             conn_string.Password = "qort0408";
-            conn_string.Database = "hakaton1806";
+            conn_string.Database = "mydb";
+
+
+            //conn_string.Server = "127.0.0.1";
+            //conn_string.Port = 3306;
+            //conn_string.UserID = "root";
+            //conn_string.Password = "qort0408";
+            //conn_string.Database = "hakaton1806";
 
 
 
