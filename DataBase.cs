@@ -127,10 +127,8 @@ namespace HahaServer
         #region vars
         public delegate void Status(string message);
         public event Status Notify;
-        private string connectionParams;
         private MySqlConnection ConnectionDef;
         private static bool isConnected = false;
-        private MySqlDataAdapter daUser;
         private MySqlDataReader reader;
         MySqlConnectionStringBuilder conn_string = new MySqlConnectionStringBuilder();
         #endregion
@@ -142,13 +140,7 @@ namespace HahaServer
             conn_string.UserID = "root";
             conn_string.Password = "qort0408";
             conn_string.Database = "mydb";
-
-
-            //conn_string.Server = "127.0.0.1";
-            //conn_string.Port = 3306;
-            //conn_string.UserID = "root";
-            //conn_string.Password = "qort0408";
-            //conn_string.Database = "hakaton1806";
+            conn_string.Database = "hakaton1806";
 
 
 
@@ -164,7 +156,7 @@ namespace HahaServer
         {
             Notify?.Invoke("Started getAverageParams");
             List<Patient.Params> paramses = new List<Patient.Params>();
-            Patient.Params param = new Patient.Params(0, 0, 0, 0,0, "aboba");
+            Patient.Params param = new Patient.Params(0, 0, 0, 0, 0, "aboba");
             Patient patient = null;
 
             try
@@ -226,7 +218,7 @@ namespace HahaServer
                     lowPress = lowPress / paramses.Count;
                     topPress = topPress / paramses.Count;
                     satiration = satiration / paramses.Count;
-                    param = new Patient.Params(0,lowPress, topPress, pulse, unixtime, "aboba",satiration);
+                    param = new Patient.Params(0, lowPress, topPress, pulse, unixtime, "aboba", satiration);
 
                 }
 
@@ -398,7 +390,7 @@ namespace HahaServer
                     {
                         if (reader.Read())
                         {
-                            Notify?.Invoke("Пациент найден по "+type+" " + tokenOrPhoneOrSnils);
+                            Notify?.Invoke("Пациент найден по " + type + " " + tokenOrPhoneOrSnils);
                             patient = new Patient(Int32.Parse(reader[0].ToString()), reader[1].ToString(),
                                 reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), reader[6].ToString());
                         }
@@ -541,7 +533,7 @@ namespace HahaServer
         public string getScope(string token)
         {
             Notify?.Invoke("Started getScope with token " + token);
-            string res = null;
+            string res = "";
             int pacientID = 0;
             try
             {
@@ -555,23 +547,27 @@ namespace HahaServer
                         if (reader.Read())
                         {
                             pacientID = Int32.Parse(reader[0].ToString());
+                            Notify?.Invoke("Find patientid " + pacientID + " by using token " + token);
                         }
                         else
                         {
                             Notify?.Invoke("ПОльзователь с токеном " + token + " не найден");
                         }
                     }
-                    request = "SELECT MAX(topPress), MIN(toppress), MAX(lowPress), MIN(lowPress), MAX(pulse), MIN(Pulse) FROM params WHERE pacientid=" + pacientID + " AND unixtime=UNIX_TIMESTAMP()-7*24*60*60;";
+                    request = "SELECT MAX(topPress), MIN(toppress), MAX(lowPress), MIN(lowPress), MAX(pulse), MIN(Pulse) FROM params WHERE patientid=" + pacientID + " AND unixtime=UNIX_TIMESTAMP()-7*24*60*60;";
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
-                        if(reader.Read())
+                        if (reader.Read())
                         {
-                            res = reader[0].ToString() + " " + reader[1].ToString() + " " + reader[2].ToString() + " " + reader[3].ToString() + " " + reader[4].ToString() + " " + reader[5].ToString();
-                            if(reader[0].ToString().Equals(reader[1].ToString()) || reader[2].ToString().Equals(reader[3].ToString()) || reader[4].ToString().Equals(reader[5].ToString()))
-                            {               
-                                Notify?.Invoke("У пользователя недостаточно измерений");
-                                return null;
+
+                            if (reader[0].ToString().Equals(reader[1].ToString()) || reader[2].ToString().Equals(reader[3].ToString()) || reader[4].ToString().Equals(reader[5].ToString()))
+                            {
+                                Notify?.Invoke("У пользователя недостаточно измерений " + reader[0].ToString());
+                            }
+                            else
+                            {
+                                res = reader[0].ToString() + " " + reader[1].ToString() + " " + reader[2].ToString() + " " + reader[3].ToString() + " " + reader[4].ToString() + " " + reader[5].ToString();
                             }
                         }
                         else
@@ -581,11 +577,11 @@ namespace HahaServer
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Notify?.Invoke(e.Message);
             }
-            Notify?.Invoke("Выбраны границы: " +res);
+            Notify?.Invoke("Выбраны границы: " + res);
             Notify?.Invoke("Stop getScope");
             return res;
         }
@@ -617,7 +613,7 @@ namespace HahaServer
                         }
                     }
                     request = "INSERT INTO params (patientId, unixtime, topPress, lowPress,pulse, saturation, tag) VALUES " +
-                        "(" + patientID + "," + unixtime + "," + topPress + "," + lowPress + "," + Pulse + "," + saturation + ",\""+tag+"\");";
+                        "(" + patientID + "," + unixtime + "," + topPress + "," + lowPress + "," + Pulse + "," + saturation + ",\"" + tag + "\");";
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     cmdSel.ExecuteNonQuery();
                     Notify?.Invoke("Измерение пользователя " + patientID + " добавлено");
@@ -667,13 +663,13 @@ namespace HahaServer
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
-                        
+
                         while (reader.Read())
                         {
-                            Patient.Params para = new Patient.Params(Int32.Parse(reader[0].ToString()), 
-                                Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()), 
+                            Patient.Params para = new Patient.Params(Int32.Parse(reader[0].ToString()),
+                                Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()),
                                 Int32.Parse(reader[3].ToString()),
-                                Int32.Parse(reader[5].ToString()),reader[4].ToString());
+                                Int32.Parse(reader[5].ToString()), reader[4].ToString());
                             patient.addParams(para);
                             Notify?.Invoke(para.toString());
                         }
@@ -879,28 +875,28 @@ namespace HahaServer
         public void getHistoryMessages(int patientID, int doctorID)
         {
             Notify?.Invoke("Started getHistoryMessages");
-            
 
-                try
-                {
 
-                    string request;
-                    request = "SELECT * FROM chat WHERE patientid =" + patientID + " AND doctorid=" + doctorID + ";";
-                    MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
-                    MySqlDataReader reader = cmdSel.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        Console.WriteLine(reader[0] + " " + reader[1]);
-                    }
-                    Notify?.Invoke("Похожие строки поиска возвращены");
-                    reader.Close();
-                }
-                catch (Exception e)
+            try
+            {
+
+                string request;
+                request = "SELECT * FROM chat WHERE patientid =" + patientID + " AND doctorid=" + doctorID + ";";
+                MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
+                MySqlDataReader reader = cmdSel.ExecuteReader();
+                while (reader.Read())
                 {
-                    Notify?.Invoke(e.Message);
+                    Console.WriteLine(reader[0] + " " + reader[1]);
                 }
-            
-            
+                Notify?.Invoke("Похожие строки поиска возвращены");
+                reader.Close();
+            }
+            catch (Exception e)
+            {
+                Notify?.Invoke(e.Message);
+            }
+
+
         }
 
         //Работает
