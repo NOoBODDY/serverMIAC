@@ -669,7 +669,7 @@ namespace HahaServer
                             Patient.Params para = new Patient.Params(Int32.Parse(reader[0].ToString()),
                                 Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()),
                                 Int32.Parse(reader[3].ToString()),
-                                Int32.Parse(reader[5].ToString()), reader[4].ToString());
+                                Int32.Parse(reader[4].ToString()), reader[5].ToString());
                             patient.addParams(para);
                             Notify?.Invoke(para.toString());
                         }
