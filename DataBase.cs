@@ -538,7 +538,57 @@ namespace HahaServer
             }
 
         }
-
+        public string getScope(string token)
+        {
+            Notify?.Invoke("Started getScope with token " + token);
+            string res = null;
+            int pacientID = 0;
+            try
+            {
+                using (ConnectionDef)
+                {
+                    ConnectionDef.Open();
+                    string request = "SELECT id FROM patient WHERE token=\"" + token + "\";";
+                    MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
+                    using (MySqlDataReader reader = cmdSel.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            pacientID = Int32.Parse(reader[0].ToString());
+                        }
+                        else
+                        {
+                            Notify?.Invoke("ПОльзователь с токеном " + token + " не найден");
+                        }
+                    }
+                    request = "SELECT MAX(topPress), MIN(toppress), MAX(lowPress), MIN(lowPress), MAX(pulse), MIN(Pulse) FROM params WHERE pacientid=" + pacientID + " AND unixtime=UNIX_TIMESTAMP()-7*24*60*60;";
+                    cmdSel = new MySqlCommand(request, ConnectionDef);
+                    using (MySqlDataReader reader = cmdSel.ExecuteReader())
+                    {
+                        if(reader.Read())
+                        {
+                            res = reader[0].ToString() + " " + reader[1].ToString() + " " + reader[2].ToString() + " " + reader[3].ToString() + " " + reader[4].ToString() + " " + reader[5].ToString();
+                            if(reader[0].ToString().Equals(reader[1].ToString()) || reader[2].ToString().Equals(reader[3].ToString()) || reader[4].ToString().Equals(reader[5].ToString()))
+                            {               
+                                Notify?.Invoke("У пользователя недостаточно измерений");
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            Notify?.Invoke("У пользователя нет измерений");
+                        }
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                Notify?.Invoke(e.Message);
+            }
+            Notify?.Invoke("Выбраны границы: " +res);
+            Notify?.Invoke("Stop getScope");
+            return res;
+        }
         //Работает
         /// <summary>
         /// Добавляем статистику пациента
