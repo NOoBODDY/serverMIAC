@@ -638,15 +638,15 @@ namespace HahaServer
         public Patient getHistoryParams(string token)
         {
             Notify?.Invoke("Started getHistoryParams");
+            Patient patient = null;
+            string request;
             try
             {
                 using (ConnectionDef)
                 {
                     ConnectionDef.Open();
-                    string request;
-                    request = "SELECT id, firstname, surname, lastname, phonenum, token FROM patient WHERE token=\"" + token + "\";";
+                    request = "SELECT id, firstname, surname, lastname, token, phonenum FROM patient WHERE token=\"" + token + "\";";
                     MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
-                    Patient patient;
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
                         if (reader.Read())
@@ -654,11 +654,11 @@ namespace HahaServer
                             string s = reader[0].ToString();
                             int id = Int32.Parse(s);
                             patient = new Patient(Int32.Parse(reader[0].ToString()), reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString());
-                            Notify?.Invoke("Пользователь с токеном " + token + " найден: " + patient.toString());
+                            Notify?.Invoke("Find patient with " + token + ": " + patient.toString());
                         }
                         else
                         {
-                            Notify?.Invoke("Пользователь с токеном" + token + " не найден");
+                            Notify?.Invoke("Patient with token " + token + " not found");
                             return null;
                         }
                     }
@@ -667,7 +667,7 @@ namespace HahaServer
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
-                        Notify?.Invoke("История изменения пользователя " + patientID + " возвращена");
+                        
                         while (reader.Read())
                         {
                             Patient.Params para = new Patient.Params(Int32.Parse(reader[0].ToString()), 
@@ -677,8 +677,7 @@ namespace HahaServer
                             patient.addParams(para);
                             Notify?.Invoke(para.toString());
                         }
-                        Notify?.Invoke("\n");
-                        return patient;
+                        Notify?.Invoke("Returned params of patientID " + patientID);
                     }
                 }
             }
@@ -686,8 +685,8 @@ namespace HahaServer
             {
                 Notify?.Invoke(e.Message);
             }
-
-            return null;
+            Notify?.Invoke("Stop getHistoryParams");
+            return patient;
         }
         #endregion
 
