@@ -140,7 +140,7 @@ namespace HahaServer
             conn_string.UserID = "root";
             conn_string.Password = "qort0408";
             conn_string.Database = "mydb";
-            conn_string.Database = "hakaton1806";
+            //conn_string.Database = "hakaton1806";
 
 
 
