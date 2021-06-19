@@ -342,9 +342,12 @@ namespace HahaServer
 
             Patient patient = dataBase.getHistoryParams(token);
             //Console.WriteLine("тут");
-            JObject response = new JObject();
-
-            response.Add(patient.getParams());
+            JArray response = new JArray();
+            foreach(Patient.Params i in patient.getParams())
+            {
+                JObject one = JObject.FromObject(i);
+                response.Add(one);
+            }
             Console.WriteLine(response.ToString());
             return response.ToString();
         }
@@ -436,37 +439,12 @@ namespace HahaServer
 
             return null;
         }
-        /*
-        static string analizeParam(string token)
+        
+
+        /*static string saveForm()
         {
-            DataBase dataBase = null;
-            try
-            {
-                dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-            if (DEBUG)
-            {
-                dataBase.Notify += messaging;
-            }
-            Patient patient = dataBase.getHistoryParams(token);
-            List<Patient.Params> list = patient.getParams();
-            var top = from i in list
-                            select i.TopPress;
-            var low = from i in list
-                      select i.LowPress;
-            var pulse = from i in list
-                      select i.Pulse;
-            var line = top.ToList();
-            line.Sort();
-            int leftTop = 
 
-        }
-        */
-
+        }*/
 
     }
 }
