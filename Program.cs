@@ -154,6 +154,9 @@ namespace HahaServer
                     case "pinCheck":
                         response = pinCheck(requestDeserialized.SelectToken("params").SelectToken("pin").ToString(), requestDeserialized.SelectToken("params").SelectToken("phone").ToString());
                     break;
+                    case "getHistory":
+                        response = getHistory(Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("id")));
+                        break;
                     default:
                         response = unKnownMethod(requestDeserialized.SelectToken("method").ToString());
                         Console.WriteLine("Пришел неизвестный метод");
@@ -201,12 +204,10 @@ namespace HahaServer
         /// <param name="phone"></param>
         static string sendSMS(string phone)
         {
-            Console.WriteLine("Работаю ");
             DataBase dataBase = null;
             try 
             {
                 dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
-                //dataBase.connect();
             }
             catch(Exception ex)
             {
@@ -218,7 +219,6 @@ namespace HahaServer
             }
 
             phone = String.Join("", phone.Split('+', ' ', '-')); //удаляем парашу
-            Console.WriteLine("Работаю " + phone);
             Random random = new Random();
             
             int queue = random.Next(100);
@@ -229,11 +229,10 @@ namespace HahaServer
                 pin+=rnd.Next(0, 10).ToString();
             }
             bool reg = dataBase.isExistsPatient(phone);
-            dataBase.authPatient(phone, pin); // авторизация пользователя
-
             SMSAERO sms = new SMSAERO();
             if (phone == "79517177545")                         //мой:)
             {
+                pin = "0000";
                 Console.WriteLine("Это тестовый номер");
                 Console.WriteLine("Pin: " + pin);
             }
@@ -241,6 +240,11 @@ namespace HahaServer
             {
                 sms.send_sms_now(phone, "Ваш код №" + (queue).ToString() + " " + pin, 0, 2); //отправляем смс
             }
+            dataBase.authPatient(phone, pin); // авторизация пользователя
+
+            
+            
+            
 
             JObject response = new JObject();
             if (reg)
@@ -252,7 +256,6 @@ namespace HahaServer
                 response.Add("type", "new");
             }
             response.Add("queue", queue);
-            Console.WriteLine(response.ToString());
             return response.ToString();
         }
 
@@ -264,7 +267,6 @@ namespace HahaServer
             try
             {
                 dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
-                //dataBase.connect();
             }
             catch (Exception ex)
             {
@@ -278,15 +280,42 @@ namespace HahaServer
             {
                 response.Add("type", "approved");
                 response.Add("token", dataBase.getPatientToken(phone));
+                Patient patient = dataBase.getPatient(phone);
+                JObject param = new JObject();
+                param.Add("id", patient.getId());
+                param.Add("firstname", patient.getFirstName());
+                param.Add("surname", patient.getSurName());
+                param.Add("lastname", patient.getLastName());
+                //param.Add("snils", patient.getSnils());
+                response.Add("patient", param);
             }
             else
             {
                 response.Add("type", "cancel");
             }
-            Console.WriteLine(response.ToString());
             return response.ToString();
         }
 
-        
+        static string getHistory(int id)
+        {
+            DataBase dataBase = null;
+            try
+            {
+                dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            if (DEBUG)
+            {
+                dataBase.Notify += messaging;
+            }
+            Patient patient = dataBase.getHistoryParams(id);
+            JObject response = new JObject();
+            response.Add(patient.getParams());
+            Console.WriteLine(response.ToString());
+            return response.ToString();
+        }
     }
 }
