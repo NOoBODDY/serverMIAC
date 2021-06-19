@@ -220,10 +220,6 @@ namespace HahaServer
 
 
 
-        /// <summary>
-        /// Авторизация или регистрация 
-        /// </summary>
-        /// <param name="phone"></param>
         static string sendSMS(string phone)
         {
             DataBase dataBase = null;
@@ -413,22 +409,28 @@ namespace HahaServer
             string input = dataBase.getScope(token);
 
             var param = input.Split(' ');
-            //var image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto)));
-            //bool flag = true;
-            //int i = 1;
-            //while (flag)
-            //{
-            //    FileInfo fileInf = new FileInfo(name + ".jpg");
-            //    if (fileInf.Exists)
-            //    {
-            //        name += i.ToString();
-            //    }
-            //    else
-            //    {
-            //        image.Save(name + ".jpg", ImageFormat.Jpeg);
-            //    }
-            //}
-            ProcessStartInfo procStartInfo = new ProcessStartInfo("python3", "main.py t2.jpg 120 200 60 130 50 200");
+            var image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto)));
+            
+            bool flag = true;
+            int i = 1;
+            while (flag)
+            {
+                FileInfo fileInf = new FileInfo(name + ".jpg");
+                Console.WriteLine(name + ".jpg");
+                if (fileInf.Exists)
+                {
+                    name += i.ToString();
+                    i++;
+                }
+                else
+                {
+                    image.Save(name + ".jpg", ImageFormat.Jpeg);
+                    flag = false;
+                    Console.WriteLine("Тут");
+                }
+            }
+            string putt = param[1] + ' ' + param[0] + ' ' + param[3] + ' ' + param[2] + ' ' + param[5] + ' ' + param[4];
+            ProcessStartInfo procStartInfo = new ProcessStartInfo("python3", "main.py " + name + ".jpg " + putt);
             procStartInfo.RedirectStandardOutput = true;
             procStartInfo.UseShellExecute = false;
             procStartInfo.CreateNoWindow = true;
@@ -440,10 +442,20 @@ namespace HahaServer
             proc.WaitForExit();
             Console.WriteLine("Получаем это: " + result);
 
-            //dynamic result = function(name + ".jpg", 70, 130, 50, 100, 50, 200);
-            //dynamic result = function(name + ".jpg", param[1], param[0], param[3], param[2], param[5], param[4]);
+            var res = result.Split(' ');
 
-            return null;
+            JObject json = new JObject();
+            if (res.Length == 3)
+            {
+                json.Add("top", res[0]);
+                json.Add("low", res[1]);
+                json.Add("pulse", res[2]);
+            }
+            else
+            {
+                json.Add("err","badPhoto");
+            }
+            return json.ToString();
         }
         
 
