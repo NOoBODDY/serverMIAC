@@ -91,13 +91,19 @@ namespace HahaServer
             private int pulse;
             private int saturation;
             private long unixtime;
+            private string tag;
+            private int id;
+            public string Tag { get { return tag; } private set { tag = value; } }
+            public int Id { get { return id; } private set { id = value; } }
             public int LowPress { get { return this.lowPress; } private set { this.lowPress = value; } }
             public int TopPress { get { return this.topPress; } private set { this.topPress = value; } }
             public int Pulse { get { return this.pulse; } private set { this.pulse = value; } }
             public int Saturation { get { return this.saturation; } private set { this.saturation = value; } }
             public long Unixtime { get { return this.unixtime; } private set { this.unixtime = value; } }
-            public Params(int lowpress, int toppress, int pulse, long unixtime, int saturation = 0)
+            public Params(int id, int lowpress, int toppress, int pulse, long unixtime, string tag, int saturation = 0)
             {
+                this.Tag = tag;
+                this.Id = id;
                 this.LowPress = lowpress;
                 this.TopPress = toppress;
                 this.Pulse = pulse;
@@ -158,7 +164,7 @@ namespace HahaServer
         {
             Notify?.Invoke("Started getAverageParams");
             List<Patient.Params> paramses = new List<Patient.Params>();
-            Patient.Params param = new Patient.Params(0, 0, 0, 0, 0);
+            Patient.Params param = new Patient.Params(0, 0, 0, 0,0, "aboba");
             Patient patient = null;
 
             try
@@ -196,7 +202,7 @@ namespace HahaServer
                             Notify?.Invoke("Пациент не найден");
                         }
                     }
-                    request = "SELECT lowpress, topPress, pulse, unixtime, saturation FROM params where patientid =+" + patient.Id + "+ AND unixtime>(UNIX_TIMESTAMP()-7*24*60*60);";
+                    request = "SELECT id, lowpress, topPress, pulse, unixtime, tag, saturation FROM params where patientid =+" + patient.Id + "+ AND unixtime>(UNIX_TIMESTAMP()-7*24*60*60);";
 
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
@@ -204,7 +210,7 @@ namespace HahaServer
                         while (reader.Read())
                         {
                             Patient.Params par = new Patient.Params(Int32.Parse(reader[0].ToString()),
-                                Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()), Int32.Parse(reader[3].ToString()), Int32.Parse(reader[4].ToString()));
+                                Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()), Int32.Parse(reader[3].ToString()), Int64.Parse(reader[5].ToString()), reader[4].ToString(), Int32.Parse(reader[5].ToString()));
                             paramses.Add(par);
                         }
 
@@ -220,7 +226,7 @@ namespace HahaServer
                     lowPress = lowPress / paramses.Count;
                     topPress = topPress / paramses.Count;
                     satiration = satiration / paramses.Count;
-                    param = new Patient.Params(lowPress, topPress, pulse, unixtime, satiration);
+                    param = new Patient.Params(0,lowPress, topPress, pulse, unixtime, "aboba",satiration);
 
                 }
 
@@ -598,14 +604,17 @@ namespace HahaServer
                         }
                     }
                     int patientID = patient.Id;
-                    request = "SELECT lowpress, toppress, pulse, unixtime FROM params WHERE patientid=" + patientID + ";";
+                    request = "SELECT  id, lowpress, toppress, pulse, unixtime, tag FROM params WHERE patientid=" + patientID + " ORDER BY id DESC;";
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
                         Notify?.Invoke("История изменения пользователя " + patientID + " возвращена");
                         while (reader.Read())
                         {
-                            Patient.Params para = new Patient.Params(Int32.Parse(reader[0].ToString()), Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()), Int32.Parse(reader[3].ToString()));
+                            Patient.Params para = new Patient.Params(Int32.Parse(reader[0].ToString()), 
+                                Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()), 
+                                Int32.Parse(reader[3].ToString()),
+                                Int32.Parse(reader[5].ToString()),reader[4].ToString());
                             patient.addParams(para);
                             Notify?.Invoke(para.toString());
                         }
@@ -783,13 +792,13 @@ namespace HahaServer
                     }
 
                     int patientid = patient.Id;
-                    request = "SELECT lowpress,toppress, pulse, unixtime,saturation FROM params WHERE patientid = " + patient + ";";
+                    request = "SELECT id, lowpress,toppress, pulse, unixtime,tag,saturation FROM params WHERE patientid = " + patient + ";";
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            Patient.Params par = new Patient.Params(Int32.Parse(reader[0].ToString()), Int32.Parse(reader[1].ToString()),
-                                Int32.Parse(reader[2].ToString()), Int32.Parse(reader[3].ToString()), Int32.Parse(reader[4].ToString()));
+                            Patient.Params par = new Patient.Params(Int32.Parse(reader[0].ToString()), Int32.Parse(reader[0].ToString()), Int32.Parse(reader[1].ToString()),
+                                Int32.Parse(reader[2].ToString()), Int32.Parse(reader[3].ToString()), reader[4].ToString(), Int32.Parse(reader[5].ToString()));
                             patient.addParams(par);
                         }
                     }
