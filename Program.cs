@@ -155,7 +155,10 @@ namespace HahaServer
                         response = pinCheck(requestDeserialized.SelectToken("params").SelectToken("pin").ToString(), requestDeserialized.SelectToken("params").SelectToken("phone").ToString());
                     break;
                     case "getHistory":
-                        response = getHistory(Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("id")));
+                        response = getHistory(requestDeserialized.SelectToken("params").SelectToken("token").ToString());
+                        break;
+                    case "setData":
+                        response = setData(requestDeserialized.SelectToken("params").SelectToken("token").ToString(), Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("topPress")), Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("lowPress")), Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("pulse")), Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("saturation")));
                         break;
                     default:
                         response = unKnownMethod(requestDeserialized.SelectToken("method").ToString());
@@ -296,7 +299,7 @@ namespace HahaServer
             return response.ToString();
         }
 
-        static string getHistory(int id)
+        static string getHistory(string token)
         {
             DataBase dataBase = null;
             try
@@ -311,11 +314,44 @@ namespace HahaServer
             {
                 dataBase.Notify += messaging;
             }
-            Patient patient = dataBase.getHistoryParams(id);
+            Patient patient = dataBase.getHistoryParams(token);
             JObject response = new JObject();
             response.Add(patient.getParams());
             Console.WriteLine(response.ToString());
             return response.ToString();
+        }
+
+        static string setData (string token, int topPress, int lowPress, int pulse, int saturation)
+        {
+            JObject response = new JObject();
+            DataBase dataBase = null;
+            try
+            {
+                dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
+            }
+            catch (Exception ex)
+            {
+                response.Add("err", ex.Message);
+                Console.WriteLine(ex);
+            }
+            if (DEBUG)
+            {
+                dataBase.Notify += messaging;
+            }
+            
+            Patient patient = dataBase.getPatient(token);
+            try
+            {
+                dataBase.addInfoPatient(token, topPress, lowPress, pulse, saturation);
+                response.Add("type", "done");
+            }
+            catch(Exception ex)
+            {
+                response.Add("err", ex.Message);
+            }
+
+            return response.ToString();
+            
         }
     }
 }
