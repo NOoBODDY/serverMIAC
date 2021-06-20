@@ -181,6 +181,9 @@ namespace HahaServer
                     case "saveForm":
                         response = saveForm(requestDeserialized);
                         break;
+                    case "getHistorySnils":
+                        response = getHistorySnils(requestDeserialized.SelectToken("params").SelectToken("snils").ToString());
+                        break;
                     default:
                         response = unKnownMethod(requestDeserialized.SelectToken("method").ToString());
                         Console.WriteLine("Пришел неизвестный метод");
