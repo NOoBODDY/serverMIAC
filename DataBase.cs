@@ -160,7 +160,7 @@ namespace HahaServer
         public Patient.Params getAverageParams(string tokenOrPhoneOrSnils)
         {
             Notify?.Invoke("Started getAverageParams");
-            Patient.Params param = new Patient.Params(120, 80, 60, 0, 0, "aboba", 95); //На самом деле тут не инициализировать
+            Patient.Params param = new Patient.Params(0, 80, 120, 60, 0, "aboba", 95); //На самом деле тут не инициализировать
             Patient patient = null;
             try
             {
