@@ -197,7 +197,7 @@ namespace HahaServer
                             Notify?.Invoke("Pacient not found");
                         }
                     }
-                    request = " SELECT AVG(toppress), AVG(lowpress), AVG(pulse), AVG(saturation) FROM params where patientid =" + patient.Id + " AND unixtime>UNIX_TIMESTAMP()-7*24*60*60;";
+                    request = " SELECT AVG(lowpress), AVG(toppress), AVG(pulse), AVG(saturation) FROM params where patientid =" + patient.Id + " AND unixtime>UNIX_TIMESTAMP()-7*24*60*60;";
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
