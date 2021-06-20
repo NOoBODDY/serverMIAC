@@ -134,12 +134,16 @@ namespace HahaServer
         #endregion
         public DataBase(string ServerIP, string Login, string NameBD, string Password)
         {
+
             conn_string.Server = "127.0.0.1";
             conn_string.Port = 3306;
             conn_string.UserID = "root";
             conn_string.Password = "qort0408";
             conn_string.Database = "mydb";
             //conn_string.Database = "hakaton1806";
+
+
+
             ConnectionDef = new MySqlConnection(conn_string.ToString());
         }
 
@@ -198,15 +202,15 @@ namespace HahaServer
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
 
-                        if (reader.HasRows) //Если есть данные
+                        if (reader.HasRows && reader.Read()) //Если есть данные
                         {
-                            reader.Read();
                             param = new Patient.Params(0, Convert.ToInt32(Double.Parse(reader[0].ToString())), Convert.ToInt32(Double.Parse(reader[1].ToString())),
                                 Convert.ToInt32(Double.Parse(reader[2].ToString())), 0, "aboba", Convert.ToInt32(Double.Parse(reader[3].ToString())));
                         }
                         else
                         {
                             Notify?.Invoke("Cannot found params for pacient with id" + patient.Id);
+                            param = new Patient.Params(0, 120, 80, 60, 0, "aboba", 95);
                         }
                     }
                 }
