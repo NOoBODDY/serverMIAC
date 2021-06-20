@@ -134,16 +134,12 @@ namespace HahaServer
         #endregion
         public DataBase(string ServerIP, string Login, string NameBD, string Password)
         {
-
             conn_string.Server = "127.0.0.1";
             conn_string.Port = 3306;
             conn_string.UserID = "root";
             conn_string.Password = "qort0408";
             conn_string.Database = "mydb";
             //conn_string.Database = "hakaton1806";
-
-
-
             ConnectionDef = new MySqlConnection(conn_string.ToString());
         }
 
@@ -224,6 +220,54 @@ namespace HahaServer
             return param;
         }
 
+        /// <summary>
+        /// Добавляем данные анкеты
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="snils"></param>
+        /// <param name="isIrrationalEating"></param>
+        /// <param name="age"></param>
+        /// <param name="fat"></param>
+        /// <param name="female"></param>
+        /// <param name="smoking"></param>
+        /// <param name="diabetes"></param>
+        /// <param name="weight"></param>
+        /// <param name="research"></param>
+        /// <param name="leftVentricularHypertension"></param>
+        /// <param name="thickeningCarotidArteryWall"></param>
+        /// <param name="increasedStiffnessArteryWall"></param>
+        /// <param name="moderateIncreaseInSerumCreatinine"></param>
+        /// <param name="decreaseFiltrationRate"></param>
+        public void setInfoPatient(string token, string snils, bool isIrrationalEating, int age, bool fat, bool female, bool smoking,
+             bool diabetes, int weight, bool research, bool leftVentricularHypertension, bool thickeningCarotidArteryWall,
+            bool increasedStiffnessArteryWall, bool moderateIncreaseInSerumCreatinine, bool decreaseFiltrationRate)
+        {
+            Notify?.Invoke("Start setInfoPatient");
+            try
+            {
+                using (ConnectionDef)
+                {
+                    ConnectionDef.Open();
+                    string request = "UPDATE patient SET snils=\"" + snils + "\" WHERE token=\"" + token + "\";";
+                    MySqlCommand cmdSel = new MySqlCommand(request, ConnectionDef);
+                    cmdSel.ExecuteNonQuery();
+                    Notify?.Invoke("Snils updated");
+                    request = "INSERT INTO infopatient VALUES (\"" + snils + "\"," + isIrrationalEating + "," + age + "," + fat + "," + smoking + "," +
+                        diabetes + "," + weight + "," + research + "," + leftVentricularHypertension + "," + thickeningCarotidArteryWall + "," +
+                        increasedStiffnessArteryWall + "," + moderateIncreaseInSerumCreatinine + "," + decreaseFiltrationRate + ");";
+                    cmdSel = new MySqlCommand(request, ConnectionDef);
+                    cmdSel.ExecuteNonQuery();
+                    Notify?.Invoke("Info added");
+                }
+            }
+            catch (Exception e)
+            {
+                Notify?.Invoke(e.Message);
+                Notify?.Invoke("Abort setInfoPatient");
+            }
+
+            Notify?.Invoke("Stopped setInfoPatient");
+        }
         /// <summary>
         /// Проверить существует ли пациент
         /// </summary>
