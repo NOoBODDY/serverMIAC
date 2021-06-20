@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using System.Drawing.Imaging;
 using System.Drawing;
 using System.Linq;
-using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace HahaServer
@@ -474,10 +474,46 @@ namespace HahaServer
 
         static string saveForm(JObject json)
         {
-
-            return null;
+            
+            DataBase dataBase = null;
+            try
+            {
+                dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            if (DEBUG)
+            {
+                dataBase.Notify += messaging;
+            }
+            dataBase.setInfoPatient(
+                json.SelectToken("token").ToString(),
+                json.SelectToken("snils").ToString(),
+                convertToBool(json.SelectToken("isIrrationalEating").ToString()),
+                Convert.ToInt32(json.SelectToken("age").ToString()),
+                convertToBool(json.SelectToken("fat").ToString()),
+                convertToBool(json.SelectToken("female").ToString()),
+                convertToBool(json.SelectToken("smoking").ToString()),
+                convertToBool(json.SelectToken("diabetes").ToString()),
+                Convert.ToInt32(json.SelectToken("weight").ToString()),
+                convertToBool(json.SelectToken("research").ToString()),
+                convertToBool(json.SelectToken("leftVentricularHypertension").ToString()),
+                convertToBool(json.SelectToken("thickeningCarotidArteryWall").ToString()),
+                convertToBool(json.SelectToken("increasedStiffnessArteryWall").ToString()),
+                convertToBool(json.SelectToken("moderateIncreaseInSerumCreatinine").ToString()),
+                convertToBool(json.SelectToken("research").ToString())
+                );
+            JObject result = new JObject();
+            result.Add("type","done");
+            return result.ToString();
         }
 
+        static bool convertToBool (string booling)
+        {
+            return booling == "true";
+        }
 
     }
 }
