@@ -262,7 +262,7 @@ namespace HahaServer
                 sms.send_sms_now(phone, "Ваш код №" + (queue).ToString() + " " + pin, 0, 2); //отправляем смс
             }
             dataBase.authPatient(phone, pin); // авторизация пользователя
-
+            Console.WriteLine(pin);
 
 
 
@@ -415,7 +415,15 @@ namespace HahaServer
             Image image = null;
             try 
             {
-                image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto.Substring(22))));
+                if (basePhoto.IndexOf("base64") == -1)
+                {
+                    image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto)));
+                }
+                else
+                {
+                    image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto.Substring(22))));
+                }
+                
             }
             catch (Exception ex)
             {

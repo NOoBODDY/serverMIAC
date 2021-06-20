@@ -271,7 +271,7 @@ namespace HahaServer
         private void _print_debug(string str)
         {
             Console.WriteLine(str);
-            Console.ReadLine();
+            //Console.ReadLine();
         }
 
         // отправка методом POST
