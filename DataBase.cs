@@ -140,7 +140,7 @@ namespace HahaServer
             conn_string.UserID = "root";
             conn_string.Password = "qort0408";
             conn_string.Database = "mydb";
-            //conn_string.Database = "hakaton1806";
+            conn_string.Database = "hakaton1806";
 
 
 
@@ -160,7 +160,7 @@ namespace HahaServer
         public Patient.Params getAverageParams(string tokenOrPhoneOrSnils)
         {
             Notify?.Invoke("Started getAverageParams");
-            Patient.Params param = new Patient.Params(0, 0, 0, 0, 0, "aboba"); //На самом деле тут не инициализировать
+            Patient.Params param = new Patient.Params(120, 80, 60, 0, 0, "aboba", 95); //На самом деле тут не инициализировать
             Patient patient = null;
             try
             {
