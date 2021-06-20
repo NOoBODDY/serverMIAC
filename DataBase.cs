@@ -714,7 +714,7 @@ namespace HahaServer
                         }
                     }
                     int patientID = patient.Id;
-                    request = "SELECT  id, lowpress, toppress, pulse, unixtime, tag FROM params WHERE patientid=" + patientID + " ORDER BY id DESC;";
+                    request = "SELECT  id, lowpress, toppress, pulse, unixtime, tag, saturation FROM params WHERE patientid=" + patientID + " ORDER BY id DESC;";
                     cmdSel = new MySqlCommand(request, ConnectionDef);
                     using (MySqlDataReader reader = cmdSel.ExecuteReader())
                     {
@@ -723,7 +723,7 @@ namespace HahaServer
                             Patient.Params para = new Patient.Params(Int32.Parse(reader[0].ToString()),
                                 Int32.Parse(reader[1].ToString()), Int32.Parse(reader[2].ToString()),
                                 Int32.Parse(reader[3].ToString()),
-                                Int32.Parse(reader[4].ToString()), reader[5].ToString());
+                                Int32.Parse(reader[4].ToString()), reader[5].ToString(), Int32.Parse(reader[6].ToString()));
                             patient.addParams(para);
                         }
                         Notify?.Invoke("Returned params of patientID " + patientID);
