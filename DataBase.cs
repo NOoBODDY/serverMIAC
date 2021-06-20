@@ -725,6 +725,7 @@ namespace HahaServer
                                 Int32.Parse(reader[3].ToString()),
                                 Int32.Parse(reader[4].ToString()), reader[5].ToString(), Int32.Parse(reader[6].ToString()));
                             patient.addParams(para);
+                            Notify?.Invoke(para.toString());
                         }
                         Notify?.Invoke("Returned params of patientID " + patientID);
                     }
