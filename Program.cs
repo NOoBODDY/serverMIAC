@@ -176,7 +176,10 @@ namespace HahaServer
                             ); ;
                         break;
                     case "photoAnalize":
-                        response = photoAnalize(getHistory(requestDeserialized.SelectToken("params").SelectToken("token").ToString()), getHistory(requestDeserialized.SelectToken("params").SelectToken("photo").ToString()));
+                        response = photoAnalize(requestDeserialized.SelectToken("params").SelectToken("token").ToString(), requestDeserialized.SelectToken("params").SelectToken("photo").ToString());
+                        break;
+                    case "saveForm":
+                        response = saveForm(requestDeserialized);
                         break;
                     default:
                         response = unKnownMethod(requestDeserialized.SelectToken("method").ToString());
@@ -409,14 +412,21 @@ namespace HahaServer
             string input = dataBase.getScope(token);
 
             var param = input.Split(' ');
-            var image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto)));
+            Image image = null;
+            try 
+            {
+                image = Image.FromStream(new MemoryStream(Convert.FromBase64String(basePhoto.Substring(22))));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
             
             bool flag = true;
             int i = 1;
             while (flag)
             {
                 FileInfo fileInf = new FileInfo(name + ".jpg");
-                Console.WriteLine(name + ".jpg");
                 if (fileInf.Exists)
                 {
                     name += i.ToString();
@@ -426,7 +436,6 @@ namespace HahaServer
                 {
                     image.Save(name + ".jpg", ImageFormat.Jpeg);
                     flag = false;
-                    Console.WriteLine("Тут");
                 }
             }
             string putt = param[1] + ' ' + param[0] + ' ' + param[3] + ' ' + param[2] + ' ' + param[5] + ' ' + param[4];
@@ -440,7 +449,11 @@ namespace HahaServer
             proc.Start();
             String result = proc.StandardOutput.ReadToEnd();
             proc.WaitForExit();
-            Console.WriteLine("Получаем это: " + result);
+            if (DEBUG)
+            {
+                Console.WriteLine("Получаем это: " + result);
+            }
+            
 
             var res = result.Split(' ');
 
@@ -459,10 +472,11 @@ namespace HahaServer
         }
         
 
-        /*static string saveForm()
+        static string saveForm(JObject json)
         {
 
-        }*/
+            return null;
+        }
 
 
     }
