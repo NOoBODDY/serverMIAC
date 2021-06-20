@@ -523,5 +523,32 @@ namespace HahaServer
             return booling == "true";
         }
 
+        static string getHistorySnils(string snils)
+        {
+            DataBase dataBase = null;
+            try
+            {
+                dataBase = new DataBase(serverIP, login, nameBD, password); //работаем с БД
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            if (DEBUG)
+            {
+                dataBase.Notify += messaging;
+            }
+            Patient patient = dataBase.getPatient(snils);
+            patient = dataBase.getHistoryParams(patient.Token);
+            JArray response = new JArray();
+            foreach (Patient.Params i in patient.getParams())
+            {
+                JObject one = JObject.FromObject(i);
+                response.Add(one);
+            }
+            Console.WriteLine(response.ToString());
+            return response.ToString();
+        }
+
     }
 }
