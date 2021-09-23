@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Net;
 using System.IO;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 using System.Drawing.Imaging;
 using System.Drawing;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -21,25 +19,34 @@ namespace HahaServer
 
         //
         static bool DEBUG = true;
-
+        static string serverUrl = "http://80.87.192.94:80/connection/";
         static void Main(string[] args)
         {
             Console.WriteLine("Запуск...");
 
+            //Обозначаем все методы бизнес логики
+            Dictionary<string, HttpServer.Method> Methods = new Dictionary<string, HttpServer.Method>();
+            Methods.Add("sendSMS", sendSMS);
+            Methods.Add("pinCheck", pinCheck);
+            Methods.Add("getHistory", getHistory);
+            Methods.Add("setData", setData);
+            Methods.Add("photoAnalize", photoAnalize);
+            Methods.Add("saveForm", saveForm);
+            Methods.Add("getHistorySnils", getHistorySnils);
+            //
 
+            //Обозначаем заголовки ответа
+            Dictionary<string, string> Headers = new Dictionary<string, string>();
+            Headers.Add("ReferrerPolicy", "unsafe-url");
+            Headers.Add("Access-Control-Allow-Headers", "*");
+            Headers.Add("Access-Control-Allow-Origin", "*");
+            Headers.Add("Access-Control-Allow-Methods", "*");
+            //
 
-            Thread mainThread = new Thread(new ThreadStart(startListen));
-            mainThread.Start();
-            menu(mainThread);
+            HttpServer server = new HttpServer(serverUrl, Methods, Headers);
+            Thread listenerThread = new Thread(new ThreadStart(server.Listen));
 
-
-            /*listen(listener);
-            listen(listener);
-            // останавливаем прослушивание подключений
-            listener.Stop();
-            Console.WriteLine("Обработка подключений завершена");
-            Console.Read();*/
-
+            menu(listenerThread);
 
         }
         static void menu(Thread main_thread)
@@ -62,9 +69,6 @@ namespace HahaServer
                         working = false;
                         main_thread.Abort();
                         break;
-                    case "test anal":
-                        Console.WriteLine(photoAnalize("1cac447de0804e52abbf74ab41749678", Convert.ToBase64String(File.ReadAllBytes("t2.jpg"))));
-                        break;
                     default:
                         Console.WriteLine("unknown command");
                         break;
@@ -78,156 +82,12 @@ namespace HahaServer
         }
 
 
-        static void listen(HttpListener listener)
+        //исправлено
+        static string sendSMS(string parameteres)
         {
-            Console.WriteLine("Ожидание подключений...");
-            // метод GetContext блокирует текущий поток, ожидая получение запроса 
-            HttpListenerContext context = listener.GetContext();
-            HttpListenerRequest request = context.Request;
-            Console.WriteLine(request.Headers);
-            using (Stream stream = request.InputStream)
-            {
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    Console.WriteLine(reader.ReadToEnd());
-                }
-            }
+            JObject requestDeserialized = JObject.Parse(parameteres); // десериализируем
+            string phone = requestDeserialized.SelectToken("phone").ToString();
 
-            // получаем объект ответа
-            HttpListenerResponse response = context.Response;
-            // создаем ответ в виде кода html
-            string responseStr = "<html><head><meta charset='utf8'></head><body>Привет мир!</body></html>";
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseStr);
-            // получаем поток ответа и пишем в него ответ
-            /*response.Headers.Add("ReferrerPolicy: \"unsafe-url\"");
-            response.Headers.Add("Access-Control-Allow-Headers: *");
-            response.Headers.Add("Access-Control-Allow-Origin: *");*/
-            response.AppendHeader("ReferrerPolicy", "unsafe-url");
-            response.AppendHeader("Access-Control-Allow-Headers", "*");
-            response.AppendHeader("Access-Control-Allow-Origin", "*");
-            response.AppendHeader("Access-Control-Allow-Methods", "*");
-
-            response.ContentLength64 = buffer.Length;
-            Stream output = response.OutputStream;
-            output.Write(buffer, 0, buffer.Length);
-            // закрываем поток
-            output.Close();
-        }
-
-        static void startListen()
-        {
-            HttpListener listener;
-            listener = new HttpListener();
-            // установка адресов прослушки
-            listener.Prefixes.Add("http://80.87.192.94:80/connection/");
-            listener.Start();
-
-            while (true)
-            {
-                // метод GetContext блокирует текущий поток, ожидая получение запроса 
-                HttpListenerContext context = listener.GetContext();
-                Thread newRequest = new Thread(new ParameterizedThreadStart(solveRequest));
-
-                newRequest.Start(context);
-            }
-
-        }
-        /// <summary>
-        /// Обработка запросов. В отдельный поток
-        /// </summary>
-        /// <param name="x"></param>
-        static void solveRequest(object x) //метод-поток
-        {
-            string jsonRpc;
-            HttpListenerContext context = (HttpListenerContext)x;
-            HttpListenerRequest request = context.Request;
-            using (Stream stream = request.InputStream)
-            {
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    jsonRpc = reader.ReadToEnd();
-                }
-            }
-            Console.WriteLine("Вот что пришло " + jsonRpc);
-            string response;
-            try
-            {
-                JObject requestDeserialized = JObject.Parse(jsonRpc);
-
-                switch (requestDeserialized.SelectToken("method").ToString())
-                {
-                    case "sendSMS":
-                        response = sendSMS(requestDeserialized.SelectToken("params").SelectToken("phone").ToString());
-                        break;
-                    case "pinCheck":
-                        response = pinCheck(requestDeserialized.SelectToken("params").SelectToken("pin").ToString(), requestDeserialized.SelectToken("params").SelectToken("phone").ToString());
-                        break;
-                    case "getHistory":
-                        response = getHistory(requestDeserialized.SelectToken("params").SelectToken("token").ToString());
-                        break;
-                    case "setData":
-                        response = setData(requestDeserialized.SelectToken("params").SelectToken("token").ToString(),
-                            Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("topPress")),
-                            Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("lowPress")),
-                            Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("pulse")),
-                            Convert.ToInt32(requestDeserialized.SelectToken("params").SelectToken("saturation")),
-                            Convert.ToInt64(requestDeserialized.SelectToken("params").SelectToken("unixtime")),
-                            requestDeserialized.SelectToken("params").SelectToken("tag").ToString()
-                            ); ;
-                        break;
-                    case "photoAnalize":
-                        response = photoAnalize(requestDeserialized.SelectToken("params").SelectToken("token").ToString(), requestDeserialized.SelectToken("params").SelectToken("photo").ToString());
-                        break;
-                    case "saveForm":
-                        response = saveForm(requestDeserialized);
-                        break;
-                    case "getHistorySnils":
-                        response = getHistorySnils(requestDeserialized.SelectToken("params").SelectToken("snils").ToString());
-                        break;
-                    default:
-                        response = unKnownMethod(requestDeserialized.SelectToken("method").ToString());
-                        Console.WriteLine("Пришел неизвестный метод");
-                        Console.WriteLine(jsonRpc);
-                        break;
-                }
-            }
-            catch
-            {
-                response = "";
-            }
-
-            // получаем объект ответа
-            HttpListenerResponse responseHttp = context.Response;
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(response);
-            responseHttp.AppendHeader("ReferrerPolicy", "unsafe-url");
-            responseHttp.AppendHeader("Access-Control-Allow-Headers", "*");
-            responseHttp.AppendHeader("Access-Control-Allow-Origin", "*");
-            responseHttp.AppendHeader("Access-Control-Allow-Methods", "*");
-
-            responseHttp.ContentLength64 = buffer.Length;
-            Stream output = responseHttp.OutputStream;
-            output.Write(buffer, 0, buffer.Length);
-            // закрываем поток
-            output.Close();
-        }
-
-        static string unKnownMethod(string method)
-        {
-            JObject param = new JObject();
-            param.Add("message", "unkmown method");
-            JObject response = new JObject();
-            response.Add("jsonrpc", "2.0");
-            //response.Add("id", 1);
-            response.Add("method", method);
-            response.Add("params", param);
-            return response.ToString();
-        }
-
-
-
-
-        static string sendSMS(string phone)
-        {
             DataBase dataBase = null;
             try
             {
@@ -282,10 +142,12 @@ namespace HahaServer
             response.Add("queue", queue);
             return response.ToString();
         }
-
-        static string pinCheck(string pin, string phone)
+        //исправлено
+        static string pinCheck(string parameteres)
         {
-
+            JObject requestDeserialized = JObject.Parse(parameteres); // десериализируем
+            string pin = requestDeserialized.SelectToken("pin").ToString();
+            string phone = requestDeserialized.SelectToken("phone").ToString();
             JObject response = new JObject();
             phone = String.Join("", phone.Split('+', ' ', '-')); //удаляем парашу
             DataBase dataBase = null;
@@ -331,9 +193,11 @@ namespace HahaServer
             }
             return response.ToString();
         }
-
-        static string getHistory(string token)
+        //исправлено
+        static string getHistory(string parameteres)
         {
+            JObject requestDeserialized = JObject.Parse(parameteres); // десериализируем
+            string token = requestDeserialized.SelectToken("token").ToString();
             DataBase dataBase = null;
             try
             {
@@ -359,11 +223,18 @@ namespace HahaServer
             Console.WriteLine(response.ToString());
             return response.ToString();
         }
-
-        static string setData(string token, int topPress, int lowPress, int pulse, int saturation, long unixtime, string tag)
+        //исправлено
+        static string setData(string parameteres)
         {
+            JObject requestDeserialized = JObject.Parse(parameteres);
+            string token = requestDeserialized.SelectToken("token").ToString();
+            int topPress = Convert.ToInt32(requestDeserialized.SelectToken("topPress").ToString());
+            int lowPress = Convert.ToInt32(requestDeserialized.SelectToken("lowPress").ToString());
+            int pulse = Convert.ToInt32(requestDeserialized.SelectToken("pulse").ToString());
+            int saturation = Convert.ToInt32(requestDeserialized.SelectToken("saturation").ToString());
+            long unixtime = Convert.ToInt64(requestDeserialized.SelectToken("unixtime").ToString());
+            string tag = requestDeserialized.SelectToken("tag").ToString();
             JObject response = new JObject();
-            //Console.WriteLine("Пациента надо найти");
             DataBase dataBase = null;
             try
             {
@@ -394,9 +265,12 @@ namespace HahaServer
             return response.ToString();
 
         }
-
-        static string photoAnalize(string token, string basePhoto)
+        //исправлено
+        static string photoAnalize(string parameteres)
         {
+            JObject requestDeserialized = JObject.Parse(parameteres);
+            string token = requestDeserialized.SelectToken("token").ToString();
+            string basePhoto = requestDeserialized.SelectToken("photo").ToString();
             string name = "tonometr";
             DataBase dataBase = null;
             try
@@ -481,11 +355,11 @@ namespace HahaServer
             }
             return json.ToString();
         }
-        
 
-        static string saveForm(JObject json)
+        //исправлено
+        static string saveForm(string parameteres)
         {
-            
+            JObject json = JObject.Parse(parameteres);
             DataBase dataBase = null;
             try
             {
@@ -525,9 +399,11 @@ namespace HahaServer
         {
             return booling == "true";
         }
-
-        static string getHistorySnils(string snils)
+        //исправлено
+        static string getHistorySnils(string parameteres)
         {
+            JObject requestDeserialized = JObject.Parse(parameteres);
+            string snils = requestDeserialized.SelectToken("snils").ToString();
             DataBase dataBase = null;
             try
             {
