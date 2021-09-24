@@ -20,9 +20,22 @@ namespace HahaServer
         //
         static bool DEBUG = true;
         static string serverUrl = "http://80.87.192.94:80/connection/";
+
+        delegate void logHandler(string message);
+        static event logHandler logNotify;
+        static LogManager log;
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Запуск...");
+            log = new LogManager();
+            logNotify += log.WriteToLog;
+            if (DEBUG)
+            {
+                logNotify += Console.WriteLine;
+            }
+
+            logNotify?.Invoke("Запуск...");
+
 
             //Обозначаем все методы бизнес логики
             Dictionary<string, HttpServer.Method> Methods = new Dictionary<string, HttpServer.Method>();
@@ -60,10 +73,12 @@ namespace HahaServer
                     case "debug on":
                         Console.WriteLine("debug mod on");
                         DEBUG = true;
+                        logNotify += Console.WriteLine;
                         break;
                     case "debug off":
                         Console.WriteLine("debug mod off");
                         DEBUG = false;
+                        logNotify -= Console.WriteLine;
                         break;
                     case "shutdown":
                         working = false;
@@ -83,6 +98,7 @@ namespace HahaServer
 
 
         //исправлено
+        //log added
         static string sendSMS(string parameteres)
         {
             JObject requestDeserialized = JObject.Parse(parameteres); // десериализируем
@@ -95,11 +111,13 @@ namespace HahaServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                logNotify?.Invoke(ex.Message);
             }
+            dataBase.Notify += log.WriteToLog;
+
             if (DEBUG)
             {
-                dataBase.Notify += messaging;
+                dataBase.Notify += Console.WriteLine;
             }
 
             phone = String.Join("", phone.Split('+', ' ', '-')); //удаляем парашу
@@ -125,10 +143,6 @@ namespace HahaServer
                 sms.send_sms_now(phone, "Ваш код №" + (queue).ToString() + " " + pin, 0, 2); //отправляем смс
             }
             dataBase.authPatient(phone, pin); // авторизация пользователя
-            Console.WriteLine(pin);
-
-
-
 
             JObject response = new JObject();
             if (reg)
@@ -143,6 +157,7 @@ namespace HahaServer
             return response.ToString();
         }
         //исправлено
+        //log added
         static string pinCheck(string parameteres)
         {
             JObject requestDeserialized = JObject.Parse(parameteres); // десериализируем
@@ -157,11 +172,13 @@ namespace HahaServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                logNotify?.Invoke(ex.Message);
             }
+            dataBase.Notify += log.WriteToLog;
+
             if (DEBUG)
             {
-                dataBase.Notify += messaging;
+                dataBase.Notify += Console.WriteLine;
             }
 
             if (dataBase.checkAuth(phone, pin))
@@ -169,7 +186,6 @@ namespace HahaServer
                 response.Add("type", "approved");
 
                 response.Add("token", dataBase.getPatientToken(phone));
-                Console.WriteLine("Получаем пациента");
                 Patient patient = dataBase.getPatient(phone);
 
                 Patient.Params average = dataBase.getAverageParams(phone);
@@ -205,25 +221,26 @@ namespace HahaServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                logNotify?.Invoke(ex.Message);
             }
+            dataBase.Notify += log.WriteToLog;
+
             if (DEBUG)
             {
-                dataBase.Notify += messaging;
+                dataBase.Notify += Console.WriteLine;
             }
 
             Patient patient = dataBase.getHistoryParams(token);
-            //Console.WriteLine("тут");
             JArray response = new JArray();
             foreach(Patient.Params i in patient.getParams())
             {
                 JObject one = JObject.FromObject(i);
                 response.Add(one);
             }
-            Console.WriteLine(response.ToString());
             return response.ToString();
         }
         //исправлено
+        //log added
         static string setData(string parameteres)
         {
             JObject requestDeserialized = JObject.Parse(parameteres);
@@ -243,15 +260,16 @@ namespace HahaServer
             catch (Exception ex)
             {
                 response.Add("err", ex.Message);
-                Console.WriteLine(ex);
+                logNotify?.Invoke(ex.Message);
             }
+            dataBase.Notify += log.WriteToLog;
+
             if (DEBUG)
             {
-                dataBase.Notify += messaging;
+                dataBase.Notify += Console.WriteLine;
             }
 
             Patient patient = dataBase.getPatient(token);
-            //Console.WriteLine("Пациента нашли");
             try
             {
                 dataBase.addInfoPatient(token, topPress, lowPress, pulse, saturation, unixtime, tag);
@@ -261,11 +279,11 @@ namespace HahaServer
             {
                 response.Add("err", ex.Message);
             }
-            //Console.WriteLine("ответ готов");
             return response.ToString();
 
         }
         //исправлено
+        //log added
         static string photoAnalize(string parameteres)
         {
             JObject requestDeserialized = JObject.Parse(parameteres);
@@ -279,11 +297,13 @@ namespace HahaServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                logNotify?.Invoke(ex.Message);
             }
+            dataBase.Notify += log.WriteToLog;
+
             if (DEBUG)
             {
-                dataBase.Notify += messaging;
+                dataBase.Notify += Console.WriteLine;
             }
 
             string input = dataBase.getScope(token);
@@ -304,9 +324,9 @@ namespace HahaServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                logNotify?.Invoke(ex.Message);
             }
-            
+
             bool flag = true;
             int i = 1;
             while (flag)
@@ -357,6 +377,7 @@ namespace HahaServer
         }
 
         //исправлено
+        //log added
         static string saveForm(string parameteres)
         {
             JObject json = JObject.Parse(parameteres);
@@ -367,11 +388,13 @@ namespace HahaServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                logNotify?.Invoke(ex.Message);
             }
+            dataBase.Notify += log.WriteToLog;
+
             if (DEBUG)
             {
-                dataBase.Notify += messaging;
+                dataBase.Notify += Console.WriteLine;
             }
             dataBase.setInfoPatient(
                 json.SelectToken("token").ToString(),
@@ -400,6 +423,7 @@ namespace HahaServer
             return booling == "true";
         }
         //исправлено
+        //log added
         static string getHistorySnils(string parameteres)
         {
             JObject requestDeserialized = JObject.Parse(parameteres);
@@ -411,11 +435,13 @@ namespace HahaServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                logNotify?.Invoke(ex.Message);
             }
+            dataBase.Notify += log.WriteToLog;
+
             if (DEBUG)
             {
-                dataBase.Notify += messaging;
+                dataBase.Notify += Console.WriteLine;
             }
             Patient patient = dataBase.getPatient(snils);
             patient = dataBase.getHistoryParams(patient.Token);
@@ -425,9 +451,11 @@ namespace HahaServer
                 JObject one = JObject.FromObject(i);
                 response.Add(one);
             }
-            Console.WriteLine(response.ToString());
+            //Console.WriteLine(response.ToString());
             return response.ToString();
         }
+
+
 
     }
 }
