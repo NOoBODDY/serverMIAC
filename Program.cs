@@ -12,26 +12,124 @@ namespace HahaServer
     class Program
     {
         //БД константы
-        const string serverIP = "localhost";
-        const string login = "test";
-        const string nameBD = "mydb";
-        const string password = "popit";
+        static string serverIP;
+        static string login;
+        static string nameBD;
+        static string password;
 
         //
+        
+        static string serverUrl;
+
+
         static bool DEBUG = true;
-        static string serverUrl = "http://80.87.192.94:80/connection/";
 
         delegate void logHandler(string message);
         static event logHandler logNotify;
         static LogManager log;
+        static SettingsManager settings;
 
         static void Main(string[] args)
+        {
+            Start();
+        }
+        static void menu(Thread main_thread)
+        {
+            bool working = true;
+            while (working)
+            {
+                string command = Console.ReadLine();
+                switch (command.ToLower())
+                {
+                    case "debug on":
+                        Console.WriteLine("debug mod on");
+                        DEBUG = true;
+                        logNotify += Console.WriteLine;
+                        break;
+                    case "debug off":
+                        Console.WriteLine("debug mod off");
+                        DEBUG = false;
+                        logNotify -= Console.WriteLine;
+                        break;
+                    case "shutdown":
+                        working = false;
+                        
+                        main_thread?.Abort();
+                        break;
+                    case "editprop":
+                        editSettings();
+                        main_thread?.Abort();
+                        Start();
+                        break;
+
+                    default:
+                        Console.WriteLine("unknown command");
+                        break;
+                }
+            }
+        }
+
+        static void editSettings()
+        {
+            
+            while (true)
+            {
+                Console.WriteLine("Your settings:");
+                Console.WriteLine(settings.getPropetris().ToString());
+                Console.WriteLine("write EXIT to close");
+                string text = Console.ReadLine();
+                if (text.ToLower() == "exit")
+                {
+                    break;
+                }
+                string value = Console.ReadLine();
+                Console.Clear();
+                if (settings.setPropetry(text, value))
+                {
+                    Console.WriteLine("Setting changed");
+                }
+                else
+                {
+                    Console.WriteLine("Wrong setting name");
+                }
+
+            }
+            
+        }
+
+        static void Start()
         {
             log = new LogManager();
             logNotify += log.WriteToLog;
             if (DEBUG)
             {
                 logNotify += Console.WriteLine;
+            }
+
+            List<string> Propetries = new List<string>();
+            Propetries.Add("serverUrl");
+            Propetries.Add("serverIP");
+            Propetries.Add("login");
+            Propetries.Add("nameBD");
+            Propetries.Add("password");
+
+            settings = new SettingsManager(Propetries);
+
+            JObject props = settings.getPropetris();
+            try
+            {
+                serverUrl = (string)props["serverUrl"];
+                serverIP = (string)props["serverIP"];
+                login = (string)props["login"];
+                nameBD = (string)props["nameBD"];
+                password = (string)props["password"];
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Settings error. Check the file");
+                Console.WriteLine(ex);
+                menu(null);
+                return;
             }
 
             logNotify?.Invoke("Запуск...");
@@ -60,41 +158,8 @@ namespace HahaServer
             Thread listenerThread = new Thread(new ThreadStart(server.Listen));
 
             menu(listenerThread);
-
-        }
-        static void menu(Thread main_thread)
-        {
-            bool working = true;
-            while (working)
-            {
-                string command = Console.ReadLine();
-                switch (command)
-                {
-                    case "debug on":
-                        Console.WriteLine("debug mod on");
-                        DEBUG = true;
-                        logNotify += Console.WriteLine;
-                        break;
-                    case "debug off":
-                        Console.WriteLine("debug mod off");
-                        DEBUG = false;
-                        logNotify -= Console.WriteLine;
-                        break;
-                    case "shutdown":
-                        working = false;
-                        main_thread.Abort();
-                        break;
-                    default:
-                        Console.WriteLine("unknown command");
-                        break;
-                }
-            }
         }
 
-        static void messaging(string message)
-        {
-            Console.WriteLine(message);
-        }
 
 
         //исправлено

@@ -25,7 +25,7 @@ namespace HahaServer
             Path = Folder + '\\' + FileName;
             using (StreamWriter sw = new StreamWriter(Path, true, System.Text.Encoding.Default))
             {
-                sw.WriteLine(DateTime.UtcNow.ToShortTimeString() + ' ' + text);
+                sw.WriteLine(DateTime.Now.ToShortTimeString() + ' ' + text);
             } 
         }
         public void NewFile()
